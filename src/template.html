@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TEC Facility Reporting Tool</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--tp:#0b0b0b;--ts:#52514e;--tm:#898781;--s0:#f5f4f0;--s1:#ebebE3;--s2:#fff;--bd:rgba(11,11,11,.10);--bds:rgba(11,11,11,.20);--r:8px;--f:system-ui,-apple-system,sans-serif;--gs:#eaf3de;--gt:#3b6d11;--rs:#fcebeb;--rt:#a32d2d;--as:#faeeda;--at:#854f0b;--ac:#185fa5;--oa:#fff;--dg:#e24b4a;--wc:#0ea5e9;--wb:#e0f2fe;--wt:#0369a1;--ec:#eda100;--eb:#fef3e0;--et:#8a5a00}
+@media(prefers-color-scheme:dark){:root{--tp:#fff;--ts:#c3c2b7;--tm:#898781;--s0:#111110;--s1:#1a1a19;--s2:#242422;--bd:rgba(255,255,255,.10);--bds:rgba(255,255,255,.22);--gs:#173404;--gt:#c0dd97;--rs:#501313;--rt:#f09595;--as:#412402;--at:#fac775;--ac:#3987e5;--dg:#f09595;--wb:#0c2340;--wt:#7dd3fc;--eb:#3a2a06;--et:#fbbf24}}
+body{background:var(--s0);font-family:var(--f);font-size:14px;color:var(--tp);padding:1.25rem;min-height:100vh}
+.wrap{max-width:960px;margin:0 auto}
+input,select,textarea{background:var(--s2);border:.5px solid var(--bds);border-radius:var(--r);padding:7px 10px;font-size:13px;color:var(--tp);font-family:var(--f);width:100%;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ac)}
+textarea{resize:vertical;min-height:56px}
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:.875rem;border-bottom:.5px solid var(--bd);margin-bottom:1.1rem}
+.hdr-title{font-size:17px;font-weight:500}.hdr-meta{font-size:11px;color:var(--tm);margin-top:3px}
+.sync-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:20px;border:.5px solid var(--bds);background:var(--s1);cursor:pointer;font-family:var(--f)}
+.sdot{width:7px;height:7px;border-radius:50%}
+.sd-ok{background:#0ca30c}.sd-no{background:var(--bds)}.sd-busy{background:#fab219;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.tabs{display:flex;gap:1px;border-bottom:.5px solid var(--bd);margin-bottom:1.1rem;overflow-x:auto}
+.tab{padding:7px 10px;font-size:12px;color:var(--ts);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;white-space:nowrap;font-family:var(--f);transition:color .15s}
+.tab:hover{color:var(--tp)}.tab.active{color:var(--ac);border-bottom-color:var(--ac);font-weight:500}
+.pane{display:none}.pane.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:9px;margin-bottom:1.1rem}
+.kpi{background:var(--s1);border-radius:var(--r);padding:.8rem}
+.kpi.water-kpi{background:var(--wb);border:.5px solid var(--wc)22}
+.kpi.energy-kpi{background:var(--eb);border:.5px solid var(--ec)22}
+.kl{font-size:11px;color:var(--tm);margin-bottom:4px}
+.kpi.water-kpi .kl{color:var(--wt)}
+.kpi.energy-kpi .kl{color:var(--et)}
+.kv{font-size:21px;font-weight:500}
+.ks{font-size:11px;color:var(--ts);margin-top:2px}
+.badge{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px;margin-top:3px}
+.bg{background:var(--gs);color:var(--gt)}.br{background:var(--rs);color:var(--rt)}.ba{background:var(--as);color:var(--at)}.bn{background:var(--s1);color:var(--tm);border:.5px solid var(--bd)}.bw{background:var(--wb);color:var(--wt)}
+.c2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.1rem}
+.c3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:1.1rem}
+.c4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:1.1rem}
+.card{background:var(--s1);border-radius:var(--r);padding:1rem;margin-bottom:1rem}
+.card.water-card{background:var(--s1);border-top:3px solid var(--wc)}
+.ct{font-size:13px;font-weight:500;margin-bottom:10px}
+.rag-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.1rem}
+.rag-row{background:var(--s1);border-radius:var(--r);padding:.6rem .875rem;display:flex;align-items:center;gap:8px;font-size:12px}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.dg{background:#0ca30c}.da{background:#fab219}.dr{background:#d03b3b}.dn{background:var(--bds)}
+.rst{margin-left:auto;font-size:11px;color:var(--tm)}
+.fg{margin-bottom:11px}.fl{font-size:12px;color:var(--ts);margin-bottom:4px;display:block}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+.slbl{font-size:11px;font-weight:500;color:var(--tm);text-transform:uppercase;letter-spacing:.06em;margin:1rem 0 .45rem;border-bottom:.5px solid var(--bd);padding-bottom:4px}
+.btn{border:none;border-radius:var(--r);padding:7px 15px;font-size:13px;cursor:pointer;font-family:var(--f);display:inline-flex;align-items:center;gap:5px;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btp{background:var(--ac);color:var(--oa)}.btg{background:none;border:.5px solid var(--bds);color:var(--ts)}
+.btd{background:none;border:.5px solid var(--dg);color:var(--rt);padding:4px 9px;font-size:11px}
+.bts{background:none;border:.5px solid var(--bd);color:var(--ac);padding:4px 9px;font-size:11px}
+.btw{background:var(--wc);color:#fff}
+.irow{border-bottom:.5px solid var(--bd);padding:9px 0;display:flex;align-items:flex-start;gap:9px}
+.irow:last-child{border-bottom:none}.ibody{flex:1}
+.pill{display:inline-block;font-size:10px;padding:1px 7px;border-radius:10px;border:.5px solid var(--bd)}
+.asset-card{background:var(--s2);border:.5px solid var(--bd);border-radius:var(--r);padding:.75rem;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px}
+.asset-body{flex:1}.asset-name{font-size:13px;font-weight:500;margin-bottom:3px}
+.asset-meta{font-size:11px;color:var(--ts)}.asset-actions{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
+.asset-rag{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.panel{background:var(--s2);border:.5px solid var(--bd);border-radius:var(--r);padding:1rem;margin-bottom:1rem;display:none}
+.panel.open{display:block}
+/* Water info box */
+.w-info{background:var(--wb);border:.5px solid var(--wc)44;border-radius:var(--r);padding:.75rem 1rem;font-size:12px;color:var(--wt);margin-bottom:.75rem;line-height:1.6}
+.w-calc{background:var(--wb);border:.5px solid var(--wc)44;border-radius:var(--r);padding:.625rem 1rem;font-size:12px;margin-top:.5rem;color:var(--wt);min-height:32px}
+/* Water meter visual */
+.w-meter-wrap{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:.875rem}
+.w-meter-display{background:#1a3a5c;color:#00e5ff;border-radius:var(--r);padding:.625rem 1rem;font-size:18px;font-weight:600;font-family:monospace;letter-spacing:3px;min-width:160px;text-align:center}
+.w-meter-display span{font-size:11px;color:#7dd3fc;display:block;letter-spacing:0;font-family:var(--f)}
+/* Summary strip */
+.w-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:1rem}
+.w-strip-item{background:var(--wb);border-radius:var(--r);padding:.625rem .875rem;text-align:center}
+.w-strip-val{font-size:18px;font-weight:500;color:var(--wc)}
+.w-strip-lbl{font-size:10px;color:var(--wt);margin-top:2px}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--s2);border:.5px solid var(--bds);color:var(--tp);padding:9px 16px;border-radius:var(--r);font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;box-shadow:0 4px 16px rgba(0,0,0,.14)}
+.toast.show{opacity:1}
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center}
+.mbg.open{display:flex}
+.modal{background:var(--s2);border-radius:var(--r);padding:1.5rem;width:min(500px,93vw);box-shadow:0 8px 32px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+.modal h3{font-size:14px;font-weight:500;margin-bottom:1rem}
+.mfoot{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
+.step{display:flex;gap:10px;margin-bottom:.875rem}
+.stepn{width:22px;height:22px;border-radius:50%;background:var(--ac);color:var(--oa);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stepb{font-size:12px;line-height:1.5;color:var(--ts)}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:var(--s0);color:var(--ts);font-weight:500;padding:6px 9px;text-align:left;border-bottom:.5px solid var(--bd)}
+.tbl td{padding:6px 9px;border-bottom:.5px solid var(--bd)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.hi-row td{background:var(--wb);color:var(--wt);font-weight:500}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--ts);margin-bottom:7px}
+.legsq{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:3px;vertical-align:middle}
+.empty{text-align:center;padding:2rem;color:var(--tm);font-size:13px}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.875rem}
+.fbtn{border:none;border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:var(--f);background:var(--s1);color:var(--ts);border:.5px solid var(--bd)}
+.fbtn.act{background:var(--ac);color:var(--oa);border-color:var(--ac)}
+.exp-ok{color:var(--gt)}.exp-warn{color:var(--at)}.exp-bad{color:var(--rt)}
+@media(max-width:900px){.c4{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.c2,.c3,.c4,.f2,.f3,.rag-grid{grid-template-columns:1fr!important}.kv{font-size:18px}}
+@media print{
+  body{padding:0;background:#fff;font-size:11pt;color:#000}
+  .wrap{max-width:100%}
+  .no-print,.tabs,.hdr .sync-badge{display:none!important}
+  .pane{display:block!important}
+  #pane-dashboard,#pane-entry,#pane-energy,#pane-water,#pane-events,#pane-incidents,#pane-downtime,#pane-maintenance,#pane-compliance,#pane-settings{display:none!important}
+  #print-report{display:block!important}
+  .card,.kpi,.rag-row,.asset-card,.w-strip-item{background:#f8f8f8!important;border:1px solid #ddd!important}
+  .pr-cover{page-break-after:always}.pr-sec{page-break-inside:avoid;margin-bottom:1.5rem}
+  .pr-hbar{background:#1a3a5c;color:#fff;padding:.875rem 1.25rem;border-radius:4px;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between}
+  .pr-hbar h2{font-size:15pt;color:#fff}.pr-hbar p{font-size:9pt;color:rgba(255,255,255,.75)}
+  .tbl th{background:#e8f0fb!important;color:#1a3a5c!important}
+  .dg{background:#0ca30c!important}.dr{background:#d03b3b!important}.da{background:#fab219!important}
+}
+#print-report{display:none}
+/* ===== AUTH / USERS / ROLES ===== */
+.app-hidden{display:none!important}
+#loginScreen{position:fixed;inset:0;background:var(--s0);z-index:5000;display:flex;align-items:center;justify-content:center;padding:1rem}
+.login-card{background:var(--s2);border:.5px solid var(--bd);border-radius:var(--r);padding:1.75rem;width:min(360px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.16)}
+.login-card h2{font-size:16px;font-weight:500;margin-bottom:4px;display:flex;align-items:center;gap:7px}
+.login-sub{font-size:11px;color:var(--tm);margin-bottom:1.1rem}
+.login-err{font-size:12px;color:var(--rt);background:var(--rs);border-radius:var(--r);padding:.5rem .75rem;margin-bottom:.75rem;display:none}
+.login-hint{font-size:11px;color:var(--tm);margin-top:.9rem;padding-top:.75rem;border-top:.5px solid var(--bd)}
+.user-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border-radius:20px;border:.5px solid var(--bds);background:var(--s1)}
+.role-pill{font-size:9px;font-weight:600;padding:1px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.03em}
+.role-superadmin{background:var(--as);color:var(--at)}
+.role-admin{background:var(--wb);color:var(--wt)}
+.role-user{background:var(--s1);color:var(--tm);border:.5px solid var(--bd)}
+body[data-role="user"] .role-gate-admin,body[data-role="user"] .role-gate-superadmin{display:none!important}
+body[data-role="admin"] .role-gate-superadmin{display:none!important}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <h2><i class="ti ti-building"></i> TEC Facility Reporting Tool</h2>
+    <div class="login-sub">Sign in to continue</div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="fg"><label class="fl">Username</label><input type="text" id="loginUser" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()"></div>
+    <div class="fg"><label class="fl">Password</label><input type="password" id="loginPass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btp" style="width:100%;justify-content:center;margin-top:.25rem" onclick="doLogin()"><i class="ti ti-login"></i> Log in</button>
+    <div class="login-hint" id="loginHint"></div>
+  </div>
+</div>
+
+<div class="wrap app-hidden" id="appWrap">
+
+<div class="hdr">
+  <div>
+    <div class="hdr-title"><i class="ti ti-building" style="vertical-align:-2px;margin-right:6px"></i>TEC Facility Reporting Tool</div>
+    <div class="hdr-meta" id="lastUpdated">Loading…</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+    <div style="font-size:12px;color:var(--tm)" id="todayDate"></div>
+    <div class="user-badge" onclick="openUserMenu()" style="cursor:pointer" id="userBadge"></div>
+    <div class="sync-badge" onclick="hasRole('admin','superadmin')?sw('settings'):toast('Ask an admin to check Settings → Data sync.')" title="Click for sync settings"><span class="sdot sd-no" id="syncDot"></span><span id="syncLabel">Not synced</span></div>
+  </div>
+</div>
+
+<div class="tabs no-print">
+  <button class="tab active" onclick="sw('dashboard')"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
+  <button class="tab" onclick="sw('updates')"><i class="ti ti-news"></i> General Updates</button>
+  <button class="tab" onclick="sw('entry')"><i class="ti ti-pencil-plus"></i> Daily Entry</button>
+  <button class="tab" onclick="sw('energy')"><i class="ti ti-bolt"></i> Energy</button>
+  <button class="tab" onclick="sw('water')"><i class="ti ti-droplet"></i> Water</button>
+  <button class="tab" onclick="sw('events')"><i class="ti ti-calendar-event"></i> Events</button>
+  <button class="tab" onclick="sw('incidents')"><i class="ti ti-alert-triangle"></i> Incidents</button>
+  <button class="tab" onclick="sw('downtime')"><i class="ti ti-player-pause"></i> Downtime</button>
+  <button class="tab" onclick="sw('maintenance')"><i class="ti ti-tool"></i> Maintenance</button>
+  <button class="tab" onclick="sw('compliance')"><i class="ti ti-certificate"></i> Compliance</button>
+  <button class="tab role-gate-superadmin" onclick="sw('users')"><i class="ti ti-users-group"></i> Users</button>
+  <button class="tab role-gate-admin" onclick="sw('settings')"><i class="ti ti-cloud"></i> Sync</button>
+</div>
+
+
+<!-- ===== DASHBOARD ===== -->
+<div id="pane-dashboard" class="pane active">
+  <p class="slbl">Energy — current month</p>
+  <div class="kpi-grid" id="kpiGridEnergy"></div>
+  <div class="kpi-grid" id="kpiGridEnergyDetail" style="margin-top:.625rem"></div>
+  <p class="slbl"><i class="ti ti-gauge"></i> Load meter — kWh vs kVAh (current month)</p>
+  <div class="kpi-grid" id="kpiGridLoad"></div>
+  <p class="slbl"><i class="ti ti-droplet" style="color:var(--wc)"></i> Water — current month</p>
+  <div class="kpi-grid" id="kpiGridWater"></div>
+  <div class="rag-grid" id="ragGrid"></div>
+  <div class="c4">
+    <div class="card" style="margin-bottom:0"><p class="ct">Energy mix</p><div class="legend" id="mixLegend"></div><div style="position:relative;height:155px"><canvas id="mixChart"></canvas></div></div>
+    <div class="card" style="margin-bottom:0"><p class="ct">Daily energy consumption (kWh)</p><div style="position:relative;height:175px"><canvas id="dashEnergyChart"></canvas></div></div>
+    <div class="card" style="margin-bottom:0"><p class="ct">Daily load consumption (kWh)</p><div style="position:relative;height:175px"><canvas id="dashLoadChart"></canvas></div></div>
+    <div class="card" style="margin-bottom:0"><p class="ct">Daily water consumption (m³)</p><div style="position:relative;height:175px"><canvas id="dashWaterChart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ===== GENERAL FACILITY UPDATES ===== -->
+<div id="pane-updates" class="pane">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;flex-wrap:wrap;gap:8px">
+    <p class="slbl" style="margin:0">General Facility Updates</p>
+    <button class="btn btp" onclick="togglePanel('guPanel');resetGUForm()"><i class="ti ti-plus"></i> New update</button>
+  </div>
+  <div class="panel" id="guPanel">
+    <p class="ct" id="guPanelTitle">New facility update</p><input type="hidden" id="guId">
+    <div class="f2">
+      <div class="fg" style="grid-column:1/-1"><label class="fl">Header / Title</label><input type="text" id="guHeader" placeholder="e.g. Borehole pump replacement, New canteen vendor onboarding"></div>
+      <div class="fg"><label class="fl">Date</label><input type="date" id="guDate"></div>
+      <div class="fg" style="grid-column:1/-1" id="guNoteGroup"><label class="fl">Initial note</label><textarea id="guNote" placeholder="What's happening, current status, next steps"></textarea></div>
+      <div class="fg" style="grid-column:1/-1" id="guAttachGroup">
+        <label class="fl">Attachments <span style="color:var(--tm)">(images, documents — keep files under 4MB each)</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-file-upload"></i> Add file<input type="file" multiple style="display:none" onchange="addAttachmentFiles('gu',this,'guAttachList')"></label>
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-camera"></i> Take a photo<input type="file" accept="image/*" capture="environment" style="display:none" onchange="addAttachmentFiles('gu',this,'guAttachList')"></label>
+        </div>
+        <div id="guAttachList" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:.5rem">
+      <button class="btn btp" onclick="saveGU()"><i class="ti ti-device-floppy"></i> Save</button>
+      <button class="btn btg" onclick="togglePanel('guPanel')">Cancel</button>
+    </div>
+  </div>
+  <div class="kpi-grid" id="guKpis" style="margin-bottom:.875rem"></div>
+  <div class="filter-row" id="guFilters">
+    <button class="fbtn act" onclick="filterGU('All',this)">All</button>
+    <button class="fbtn" onclick="filterGU('Open',this)">Open</button>
+    <button class="fbtn" onclick="filterGU('Closed',this)">Closed</button>
+  </div>
+  <div id="guList"></div>
+</div>
+
+<!-- ===== DAILY ENTRY ===== -->
+<div id="pane-entry" class="pane">
+  <div style="background:var(--s2);border:.5px solid var(--ac);border-radius:var(--r);padding:.75rem 1rem;margin-bottom:1rem;font-size:12px;color:var(--ts)">
+    <i class="ti ti-info-circle" style="color:var(--ac)"></i> Select <strong>any date</strong> — past or present — click <strong>Load</strong> to edit or enter new data.
+  </div>
+  <div style="display:flex;gap:9px;align-items:flex-end;margin-bottom:1rem;flex-wrap:wrap">
+    <div style="flex:1;min-width:150px"><label class="fl">Select date</label><input type="date" id="entryDate" max=""></div>
+    <button class="btn btp" onclick="loadEntry()"><i class="ti ti-calendar-search"></i> Load date</button>
+    <button class="btn btg" onclick="clearEntry()"><i class="ti ti-eraser"></i> Clear</button>
+  </div>
+
+  <div class="slbl"><i class="ti ti-bolt"></i> Energy readings</div>
+  <div id="energySection">
+    <div class="f2">
+      <div class="fg"><label class="fl">Tatu utility meter reading (kWh cumulative)</label><input type="number" id="eUtility" placeholder="e.g. 145230" min="0"></div>
+      <div class="fg"><label class="fl">Load meter reading (kWh)</label><input type="number" id="eLoad" placeholder="e.g. 3480" min="0"></div>
+      <div class="fg"><label class="fl">Load meter reading (kVAh)</label><input type="number" id="eLoadKVA" placeholder="e.g. 4100" min="0"></div>
+      <div class="fg"><label class="fl">Solar inverter 1 yield (kWh)</label><input type="number" id="eSolar1" placeholder="e.g. 25" min="0"></div>
+      <div class="fg"><label class="fl">Solar inverter 2 yield (kWh)</label><input type="number" id="eSolar2" placeholder="e.g. 12" min="0"></div>
+    </div>
+  </div>
+  <div style="margin:.625rem 0 1.5rem;display:flex;align-items:center;gap:10px">
+    <button class="btn btp" id="energySaveBtn" onclick="saveEnergySection()"><i class="ti ti-device-floppy"></i> Save energy readings</button>
+    <button class="btn btg" id="energyEditBtn" style="display:none" onclick="editSection('energy')"><i class="ti ti-pencil"></i> Edit</button>
+    <span class="badge bg" id="energySavedBadge" style="display:none"><i class="ti ti-check"></i> Saved</span>
+  </div>
+
+  <div class="slbl"><i class="ti ti-droplet" style="color:var(--wc)"></i> Water meter reading</div>
+  <div class="w-info">
+    <strong><i class="ti ti-info-circle"></i> How to enter water data:</strong><br>
+    Enter the <strong>cumulative reading from your water meter in Litres</strong> (e.g. 145,230 L). The system automatically calculates daily consumption by subtracting the previous day's reading. Consumption is displayed in m³ (1 m³ = 1,000 L).
+  </div>
+  <div id="waterSection">
+    <div class="f2">
+      <div class="fg">
+        <label class="fl"><i class="ti ti-droplet" style="color:var(--wc)"></i> Water meter reading (Litres — cumulative)</label>
+        <input type="number" id="wMeter" placeholder="e.g. 145230" min="0" oninput="updateWaterCalc()">
+        <div class="w-calc" id="wCalc">Enter the current meter reading above to see calculated consumption.</div>
+      </div>
+      <div class="fg">
+        <label class="fl">Notes / observations</label>
+        <textarea id="wNotes" placeholder="Leaks, pressure issues, unusual usage…"></textarea>
+      </div>
+    </div>
+  </div>
+  <div style="margin:.625rem 0 1.5rem;display:flex;align-items:center;gap:10px">
+    <button class="btn btp" id="waterSaveBtn" onclick="saveWaterSection()"><i class="ti ti-device-floppy"></i> Save water reading</button>
+    <button class="btn btg" id="waterEditBtn" style="display:none" onclick="editSection('water')"><i class="ti ti-pencil"></i> Edit</button>
+    <span class="badge bg" id="waterSavedBadge" style="display:none"><i class="ti ti-check"></i> Saved</span>
+  </div>
+
+  <div class="slbl"><i class="ti ti-settings"></i> Systems status</div>
+  <div id="systemsSection">
+    <div class="f2">
+      <div class="fg"><label class="fl">Power supply</label><select id="sPower"><option value="up">Up</option><option value="partial">Partial outage</option><option value="down">Down</option></select></div>
+      <div class="fg"><label class="fl">Internet</label><select id="sInternet"><option value="up">Up</option><option value="degraded">Degraded</option><option value="down">Down</option></select></div>
+      <div class="fg"><label class="fl">Server room</label><select id="sServer"><option value="up">Up</option><option value="degraded">Degraded</option><option value="down">Down</option></select></div>
+      <div class="fg"><label class="fl">Solar system</label><select id="sSolar"><option value="operational">Operational</option><option value="partial">Partial fault</option><option value="down">Down</option></select></div>
+    </div>
+  </div>
+  <div style="margin:.625rem 0 1rem;display:flex;align-items:center;gap:10px">
+    <button class="btn btp" id="systemsSaveBtn" onclick="saveSystemsSection()"><i class="ti ti-device-floppy"></i> Save systems status</button>
+    <button class="btn btg" id="systemsEditBtn" style="display:none" onclick="editSection('systems')"><i class="ti ti-pencil"></i> Edit</button>
+    <span class="badge bg" id="systemsSavedBadge" style="display:none"><i class="ti ti-check"></i> Saved</span>
+  </div>
+  <div class="slbl" style="margin-top:1.5rem"><i class="ti ti-table"></i> All entries — click Edit to modify any date</div>
+  <div id="allEntriesTable"></div>
+</div>
+
+<!-- ===== ENERGY ===== -->
+<div id="pane-energy" class="pane">
+  <div class="kpi-grid" id="energyKpis"></div>
+  <div class="card"><p class="ct">Monthly energy — utility vs solar vs load (kWh)</p><div class="legend"><span><span class="legsq" style="background:#d03b3b"></span>Utility</span><span><span class="legsq" style="background:#eda100"></span>Solar</span><span><span class="legsq" style="background:#2a78d6"></span>Load</span></div><div style="position:relative;height:190px"><canvas id="monthlyChart"></canvas></div></div>
+  <div class="card"><p class="ct">Daily energy — utility vs solar vs load — last 30 days (kWh)</p><div class="legend"><span><span class="legsq" style="background:#d03b3b"></span>Utility</span><span><span class="legsq" style="background:#eda100"></span>Solar</span><span><span class="legsq" style="background:#2a78d6"></span>Load</span></div><div style="position:relative;height:190px"><canvas id="dailyEnergyChart"></canvas></div></div>
+  <div class="c2">
+    <div class="card" style="margin-bottom:0"><p class="ct">Energy cost trend (KES)</p><div style="position:relative;height:160px"><canvas id="costChart"></canvas></div></div>
+    <div class="card" style="margin-bottom:0"><p class="ct">Source breakdown</p><div class="legend" id="srcLegend"></div><div style="position:relative;height:145px"><canvas id="srcChart"></canvas></div></div>
+  </div>
+
+  <p class="slbl" style="margin-top:1.5rem"><i class="ti ti-gauge"></i> Load meter (kWh)</p>
+  <div class="kpi-grid" id="loadKpis"></div>
+  <div class="card"><p class="ct">Daily load consumption — last 30 days (kWh)</p><div style="position:relative;height:190px"><canvas id="loadDailyChart"></canvas></div></div>
+  <div class="card"><p class="ct">Monthly load total (kWh)</p><div style="position:relative;height:170px"><canvas id="loadMonthlyChart"></canvas></div></div>
+
+  <div class="slbl" style="margin-top:1.5rem"><i class="ti ti-table"></i> Energy log — all readings</div>
+  <div id="energyLogTable"></div>
+</div>
+
+<!-- ===== WATER ===== -->
+<div id="pane-water" class="pane">
+  <!-- KPI strip -->
+  <div id="waterStrip" class="w-strip"></div>
+
+  <!-- Meter display -->
+  <div class="w-meter-wrap" id="waterMeterDisplay"></div>
+
+  <!-- Daily consumption chart — full width -->
+  <div class="card water-card">
+    <p class="ct"><i class="ti ti-droplet" style="color:var(--wc)"></i> Daily water consumption — last 30 days (m³)</p>
+    <div style="position:relative;height:220px"><canvas id="waterDailyChart"></canvas></div>
+  </div>
+
+  <!-- Monthly + Cumulative -->
+  <div class="c2">
+    <div class="card water-card" style="margin-bottom:0">
+      <p class="ct">Monthly total consumption (m³)</p>
+      <div style="position:relative;height:180px"><canvas id="waterMonthlyChart"></canvas></div>
+    </div>
+    <div class="card water-card" style="margin-bottom:0">
+      <p class="ct">Cumulative meter reading (m³)</p>
+      <p style="font-size:11px;color:var(--tm);margin-bottom:8px">Sudden jumps may indicate leaks or burst pipes</p>
+      <div style="position:relative;height:160px"><canvas id="waterCumChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Day-of-week heatmap -->
+  <div class="card water-card" style="margin-top:1rem">
+    <p class="ct">Average consumption by day of week (m³)</p>
+    <div style="position:relative;height:150px"><canvas id="waterDowChart"></canvas></div>
+  </div>
+
+  <!-- Water log table -->
+  <div class="slbl" style="margin-top:1rem"><i class="ti ti-table"></i> Water log — all readings</div>
+  <div id="waterLogTable"></div>
+</div>
+
+<!-- ===== EVENTS ===== -->
+<div id="pane-events" class="pane">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;flex-wrap:wrap;gap:8px">
+    <p class="slbl" style="margin:0">Event log</p>
+    <button class="btn btp" onclick="togglePanel('evPanel');clearEvForm()"><i class="ti ti-plus"></i> Add event</button>
+  </div>
+  <div class="panel" id="evPanel">
+    <p class="ct">New / edit event</p><input type="hidden" id="evId">
+    <div class="f2">
+      <div class="fg"><label class="fl">Date</label><input type="date" id="evDate"></div>
+      <div class="fg"><label class="fl">Category</label><select id="evCat"><option value="">— select —</option><option value="Facility Visit">Facility Visit</option><option value="Meeting">Meeting</option><option value="Training">Training</option><option value="Celebration">Celebration</option></select></div>
+      <div class="fg" style="grid-column:1/-1"><label class="fl">Title / Event name</label><input type="text" id="evTitle" placeholder="e.g. Q2 Safety Audit, Staff Training — Fire Drill"></div>
+      <div class="fg" style="grid-column:1/-1"><label class="fl">Description</label><textarea id="evDesc"></textarea></div>
+      <div class="fg"><label class="fl">Attendees</label><input type="text" id="evAttendees" placeholder="Names or count"></div>
+      <div class="fg" style="grid-column:1/-1"><label class="fl">Outcome / Notes</label><textarea id="evNotes" placeholder="One point per line — each becomes a bullet, e.g.&#10;Action item assigned to John&#10;Follow-up scheduled for next week"></textarea></div>
+      <div class="fg" style="grid-column:1/-1">
+        <label class="fl">Attachments <span style="color:var(--tm)">(photos, documents)</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-file-upload"></i> Add file<input type="file" multiple style="display:none" onchange="addAttachmentFiles('ev',this,'evAttachList')"></label>
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-camera"></i> Take a photo<input type="file" accept="image/*" capture="environment" style="display:none" onchange="addAttachmentFiles('ev',this,'evAttachList')"></label>
+        </div>
+        <div id="evAttachList" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:.5rem">
+      <button class="btn btp" onclick="saveEvent()"><i class="ti ti-device-floppy"></i> Save</button>
+      <button class="btn btg" onclick="togglePanel('evPanel')">Cancel</button>
+    </div>
+  </div>
+  <div class="filter-row" id="evFilters">
+    <button class="fbtn act" onclick="filterEv('All',this)">All</button>
+    <button class="fbtn" onclick="filterEv('Facility Visit',this)">Facility Visit</button>
+    <button class="fbtn" onclick="filterEv('Meeting',this)">Meeting</button>
+    <button class="fbtn" onclick="filterEv('Training',this)">Training</button>
+    <button class="fbtn" onclick="filterEv('Celebration',this)">Celebration</button>
+  </div>
+  <div id="evList"></div>
+</div>
+
+<!-- ===== INCIDENTS ===== -->
+<div id="pane-incidents" class="pane">
+  <div class="kpi-grid" id="incKpis"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;flex-wrap:wrap;gap:8px">
+    <p class="slbl" style="margin:0">Incident log</p>
+    <button class="btn btp" onclick="togglePanel('incPanel');clearIncForm()"><i class="ti ti-plus"></i> Log incident</button>
+  </div>
+  <div class="panel" id="incPanel">
+    <p class="ct">Log / edit incident</p><input type="hidden" id="incId">
+    <div class="f2">
+      <div class="fg"><label class="fl">Start date</label><input type="date" id="iStartDate"></div>
+      <div class="fg"><label class="fl">Start time</label><input type="time" id="iStartTime"></div>
+      <div class="fg"><label class="fl">Resolved date <span style="color:var(--tm)">(leave blank if unresolved)</span></label><input type="date" id="iEndDate"></div>
+      <div class="fg"><label class="fl">Resolved time</label><input type="time" id="iEndTime"></div>
+      <div class="fg"><label class="fl">Category</label><select id="iCat" onchange="updateIncType()"><option value="">— select —</option><option value="Health & Safety">Health & Safety</option><option value="Power">Power</option><option value="Equipment">Equipment</option><option value="Water">Water</option></select></div>
+      <div class="fg" style="grid-column:1/-1"><label class="fl">Incident type <span id="iTypeHint" style="color:var(--tm)"></span></label><input type="text" id="iType" placeholder="Specify the incident"></div>
+      <div class="fg"><label class="fl">Severity</label><select id="iSev"><option value="Low">Low (P4)</option><option value="Medium">Medium (P3)</option><option value="High">High (P2)</option><option value="Critical">Critical (P1)</option></select></div>
+      <div class="fg"><label class="fl">System / Area</label><input type="text" id="iSystem" placeholder="e.g. Server room, Solar, Gate"></div>
+      <div class="fg" style="grid-column:1/-1"><label class="fl">Description</label><textarea id="iDesc"></textarea></div>
+      <div class="fg" style="grid-column:1/-1;font-size:11px;color:var(--tm)"><i class="ti ti-info-circle"></i> Downtime is calculated automatically as man-hours within working hours (7am–5pm, Mon–Sat) between start and resolution.</div>
+      <div class="fg"><label class="fl">Root cause</label><input type="text" id="iCause"></div>
+      <div class="fg"><label class="fl">Corrective action</label><input type="text" id="iAction"></div>
+      <div class="fg"><label class="fl">Status</label><select id="iStatus"><option value="Pending">Pending</option><option value="In Progress">In Progress</option><option value="Resolved">Resolved</option></select></div>
+      <div class="fg" style="grid-column:1/-1">
+        <label class="fl">Attachments <span style="color:var(--tm)">(photos, documents)</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-file-upload"></i> Add file<input type="file" multiple style="display:none" onchange="addAttachmentFiles('inc',this,'incAttachList')"></label>
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-camera"></i> Take a photo<input type="file" accept="image/*" capture="environment" style="display:none" onchange="addAttachmentFiles('inc',this,'incAttachList')"></label>
+        </div>
+        <div id="incAttachList" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:.5rem">
+      <button class="btn btp" onclick="saveIncident()"><i class="ti ti-device-floppy"></i> Save</button>
+      <button class="btn btg" onclick="togglePanel('incPanel');clearIncForm()">Cancel</button>
+    </div>
+  </div>
+  <div class="filter-row">
+    <button class="fbtn act" onclick="filterInc('All',this)">All</button>
+    <button class="fbtn" onclick="filterInc('Health & Safety',this)">Health & Safety</button>
+    <button class="fbtn" onclick="filterInc('Power',this)">Power</button>
+    <button class="fbtn" onclick="filterInc('Equipment',this)">Equipment</button>
+    <button class="fbtn" onclick="filterInc('Water',this)">Water</button>
+    <button class="fbtn" onclick="filterInc('Pending',this)">Pending only</button>
+  </div>
+  <div id="incidentList"></div>
+</div>
+
+<!-- ===== DOWNTIME ===== -->
+<div id="pane-downtime" class="pane">
+  <div class="kpi-grid" id="downtimeKpis"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;flex-wrap:wrap;gap:8px">
+    <p class="slbl" style="margin:0">Downtime log</p>
+    <button class="btn btp" onclick="togglePanel('dtPanel');clearDowntimeForm()"><i class="ti ti-plus"></i> Log downtime</button>
+  </div>
+  <div class="panel" id="dtPanel">
+    <p class="ct" id="dtPanelTitle">Log / edit downtime</p><input type="hidden" id="dtId">
+    <div class="f2">
+      <div class="fg"><label class="fl">Start date</label><input type="date" id="dtStartDate"></div>
+      <div class="fg"><label class="fl">Start time</label><input type="time" id="dtStartTime"></div>
+      <div class="fg"><label class="fl">End date <span style="color:var(--tm)">(leave blank if still ongoing)</span></label><input type="date" id="dtEndDate"></div>
+      <div class="fg"><label class="fl">End time</label><input type="time" id="dtEndTime"></div>
+      <div class="fg"><label class="fl">Category</label><select id="dtCat" onchange="updateDowntimeFields()">
+        <option value="">— select —</option>
+        <option value="Machine Breakdown">Machine Breakdown</option>
+        <option value="Power Outage">Power Outage</option>
+        <option value="Health & Safety Incident">Health & Safety Incident</option>
+        <option value="Bus Delays">Bus Delays</option>
+        <option value="Canteen Delays">Canteen Delays</option>
+        <option value="Water Outage">Water Outage</option>
+        <option value="Other">Other</option>
+      </select></div>
+      <div class="fg"><label class="fl">Area / Department affected</label><input type="text" id="dtArea" placeholder="e.g. Production line 2, Main kitchen"></div>
+      <div class="fg" id="dtReasonGroup" style="display:none"><label class="fl">Reason for delay</label><input type="text" id="dtReason" placeholder="e.g. Traffic, mechanical fault, late supplier delivery"></div>
+      <div class="fg" style="grid-column:1/-1"><label class="fl" id="dtDescLabel">Description</label><textarea id="dtDesc" placeholder="What happened, and the impact"></textarea></div>
+      <div class="fg" style="grid-column:1/-1">
+        <label class="fl">Attachments <span style="color:var(--tm)">(photos, documents)</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-file-upload"></i> Add file<input type="file" multiple style="display:none" onchange="addAttachmentFiles('dt',this,'dtAttachList')"></label>
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-camera"></i> Take a photo<input type="file" accept="image/*" capture="environment" style="display:none" onchange="addAttachmentFiles('dt',this,'dtAttachList')"></label>
+        </div>
+        <div id="dtAttachList" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:.5rem">
+      <button class="btn btp" onclick="saveDowntime()"><i class="ti ti-device-floppy"></i> Save</button>
+      <button class="btn btg" onclick="togglePanel('dtPanel');clearDowntimeForm()">Cancel</button>
+    </div>
+  </div>
+  <div class="filter-row" id="dtFilters">
+    <button class="fbtn act" onclick="filterDT('All',this)">All</button>
+    <button class="fbtn" onclick="filterDT('Machine Breakdown',this)">Machine Breakdown</button>
+    <button class="fbtn" onclick="filterDT('Power Outage',this)">Power Outage</button>
+    <button class="fbtn" onclick="filterDT('Health & Safety Incident',this)">Health & Safety</button>
+    <button class="fbtn" onclick="filterDT('Bus Delays',this)">Bus Delays</button>
+    <button class="fbtn" onclick="filterDT('Canteen Delays',this)">Canteen Delays</button>
+    <button class="fbtn" onclick="filterDT('Water Outage',this)">Water Outage</button>
+    <button class="fbtn" onclick="filterDT('Other',this)">Other</button>
+    <button class="fbtn" onclick="filterDT('Ongoing',this)">Ongoing only</button>
+  </div>
+  <div class="card">
+    <p class="ct">Downtime by category (minutes)</p>
+    <div style="position:relative;height:170px"><canvas id="dtByCatChart"></canvas></div>
+  </div>
+  <div class="slbl" style="margin-top:1rem">Downtime by category</div>
+  <div id="downtimeList"></div>
+</div>
+
+<!-- ===== MAINTENANCE ===== -->
+<div id="pane-maintenance" class="pane">
+  <div class="kpi-grid" id="maintKpis"></div>
+  <div class="c2">
+    <div class="card" style="margin-bottom:0"><p class="ct">Maintenance cost trend (KES / month)</p><div style="position:relative;height:170px"><canvas id="maintCostTrendChart"></canvas></div></div>
+    <div class="card" style="margin-bottom:0"><p class="ct">Cost by asset (KES)</p><div style="position:relative;height:170px"><canvas id="maintCostByAssetChart"></canvas></div></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;flex-wrap:wrap;gap:8px">
+    <p class="slbl" style="margin:0">Asset register</p>
+    <button class="btn btp" onclick="togglePanel('assetPanel');resetAssetForm()"><i class="ti ti-plus"></i> Add machine / equipment</button>
+  </div>
+  <div class="panel" id="assetPanel">
+    <p class="ct" id="assetPanelTitle">Add equipment</p><input type="hidden" id="assetId">
+    <div class="f3">
+      <div class="fg" style="grid-column:1/-1"><label class="fl">Name</label><input type="text" id="aName" placeholder="e.g. Generator, Air Compressor, Water Pump, UPS"></div>
+      <div class="fg"><label class="fl">Type</label><select id="aType" onchange="toggleAssetOtherType()"><option value="Machine">Machine</option><option value="Utility System">Utility System</option><option value="HVAC">HVAC</option><option value="Electrical">Electrical</option><option value="Plumbing">Plumbing</option><option value="IT Equipment">IT Equipment</option><option value="Safety Equipment">Safety Equipment</option><option value="Other">Other</option></select></div>
+      <div class="fg" id="aTypeOtherWrap" style="display:none;grid-column:1/-1"><label class="fl">Specify equipment / facility area</label><input type="text" id="aTypeOther" placeholder="e.g. Borehole pump, Perimeter fence, Generator shed, Loading bay"></div>
+      <div class="fg"><label class="fl">Maintenance frequency</label><select id="aFreq"><option value="Weekly">Weekly</option><option value="Monthly">Monthly</option><option value="Quarterly">Quarterly</option><option value="Bi-annual">Bi-annual</option><option value="Annual">Annual</option></select></div>
+      <div class="fg"><label class="fl">Last maintained</label><input type="date" id="aLast"></div>
+      <div class="fg"><label class="fl">Next due</label><input type="date" id="aNext"></div>
+      <div class="fg"><label class="fl">Make / Model</label><input type="text" id="aMake" placeholder="Optional"></div>
+      <div class="fg"><label class="fl">Serial / Tag</label><input type="text" id="aSerial" placeholder="Optional"></div>
+      <div class="fg" style="grid-column:1/-1"><label class="fl">Notes</label><input type="text" id="aNotes" placeholder="Location, condition, etc."></div>
+      <div class="fg" style="grid-column:1/-1">
+        <label class="fl">Photos / files <span style="color:var(--tm)">(nameplate, condition, etc.)</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-file-upload"></i> Add file<input type="file" multiple style="display:none" onchange="addAttachmentFiles('asset',this,'assetAttachList')"></label>
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-camera"></i> Take a photo<input type="file" accept="image/*" capture="environment" style="display:none" onchange="addAttachmentFiles('asset',this,'assetAttachList')"></label>
+        </div>
+        <div id="assetAttachList" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:.5rem">
+      <button class="btn btp" onclick="saveAsset()"><i class="ti ti-device-floppy"></i> Save</button>
+      <button class="btn btg" onclick="togglePanel('assetPanel')">Cancel</button>
+    </div>
+  </div>
+  <div class="filter-row" id="assetFilters">
+    <button class="fbtn act" onclick="filterAsset('All',this)">All</button>
+    <button class="fbtn" onclick="filterAsset('Machine',this)">Machines</button>
+    <button class="fbtn" onclick="filterAsset('Utility System',this)">Utility</button>
+    <button class="fbtn" onclick="filterAsset('HVAC',this)">HVAC</button>
+    <button class="fbtn" onclick="filterAsset('Electrical',this)">Electrical</button>
+    <button class="fbtn" onclick="filterAsset('IT Equipment',this)">IT</button>
+    <button class="fbtn" onclick="filterAsset('Other',this)">Other</button>
+    <button class="fbtn" onclick="filterAsset('Overdue',this)">⚠ Overdue</button>
+  </div>
+  <div id="assetList"></div>
+  <div class="mbg" id="logModal">
+    <div class="modal">
+      <h3><i class="ti ti-tool"></i> Log maintenance — <span id="logAssetName"></span></h3>
+      <input type="hidden" id="logAssetId">
+      <div class="f2">
+        <div class="fg"><label class="fl">Date</label><input type="date" id="logDate"></div>
+        <div class="fg"><label class="fl">Technician</label><input type="text" id="logTech" placeholder="Name or company"></div>
+        <div class="fg" style="grid-column:1/-1"><label class="fl">Work done</label><textarea id="logWork" placeholder="Describe work performed"></textarea></div>
+        <div class="fg"><label class="fl">Cost (KES)</label><input type="number" id="logCost" min="0" placeholder="0"></div>
+        <div class="fg"><label class="fl">Next due date</label><input type="date" id="logNext"></div>
+        <div class="fg" style="grid-column:1/-1"><label class="fl">Notes</label><input type="text" id="logNotes" placeholder="Parts used, findings, etc."></div>
+        <div class="fg" style="grid-column:1/-1">
+          <label class="fl">Attachments <span style="color:var(--tm)">(invoice, service report, photos — keep files under 4MB each)</span></label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+            <label class="btn btg" style="cursor:pointer"><i class="ti ti-file-upload"></i> Add file<input type="file" multiple style="display:none" onchange="addAttachmentFiles('ml',this,'logAttachList')"></label>
+            <label class="btn btg" style="cursor:pointer"><i class="ti ti-camera"></i> Take a photo<input type="file" accept="image/*" capture="environment" style="display:none" onchange="addAttachmentFiles('ml',this,'logAttachList')"></label>
+          </div>
+          <div id="logAttachList" style="margin-top:6px"></div>
+        </div>
+      </div>
+      <div class="mfoot">
+        <button class="btn btg" onclick="closeLogModal()">Cancel</button>
+        <button class="btn btp" onclick="saveMaintenanceLog()"><i class="ti ti-device-floppy"></i> Save log</button>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:1.75rem 0 .875rem;flex-wrap:wrap;gap:8px">
+    <p class="slbl" style="margin:0">Routine checks</p>
+    <button class="btn btp" onclick="togglePanel('rcPanel');resetRCForm()"><i class="ti ti-clipboard-check"></i> Log routine check</button>
+  </div>
+  <div class="panel" id="rcPanel">
+    <p class="ct" id="rcPanelTitle">Log routine check</p><input type="hidden" id="rcId">
+    <div class="f2">
+      <div class="fg"><label class="fl">Date</label><input type="date" id="rcDate"></div>
+      <div class="fg"><label class="fl">Machine / Equipment</label><select id="rcAsset" onchange="rcAssetChanged(this)"><option value="">— select —</option></select></div>
+      <div class="fg" style="grid-column:1/-1"><label class="fl">Items / areas checked</label><textarea id="rcItems" placeholder="One item per line, e.g.&#10;Oil level&#10;Belts and pulleys&#10;Safety guards&#10;Unusual noise / vibration"></textarea></div>
+      <div class="fg" style="grid-column:1/-1"><label class="fl">Comments on status</label><textarea id="rcComments" placeholder="Overall condition, and any concerns raised"></textarea></div>
+      <div class="fg"><label class="fl">Checked by</label><input type="text" id="rcChecker" placeholder="Name of person who did the check"></div>
+      <div class="fg"><label class="fl">Next check due</label><input type="date" id="rcNextCheck"></div>
+      <div class="fg" style="grid-column:1/-1">
+        <label class="fl">Attachments <span style="color:var(--tm)">(checklist photos, readings — keep files under 4MB each)</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-file-upload"></i> Add file<input type="file" multiple style="display:none" onchange="addAttachmentFiles('rc',this,'rcAttachList')"></label>
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-camera"></i> Take a photo<input type="file" accept="image/*" capture="environment" style="display:none" onchange="addAttachmentFiles('rc',this,'rcAttachList')"></label>
+        </div>
+        <div id="rcAttachList" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:.5rem">
+      <button class="btn btp" onclick="saveRoutineCheck()"><i class="ti ti-device-floppy"></i> Save</button>
+      <button class="btn btg" onclick="togglePanel('rcPanel')">Cancel</button>
+    </div>
+  </div>
+  <div class="kpi-grid" id="rcKpis" style="margin-bottom:.875rem"></div>
+  <div id="routineCheckList"></div>
+</div>
+
+<!-- ===== COMPLIANCE ===== -->
+<div id="pane-compliance" class="pane">
+  <div class="kpi-grid" id="compKpis"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;flex-wrap:wrap;gap:8px">
+    <p class="slbl" style="margin:0">Compliance register</p>
+    <button class="btn btp" onclick="togglePanel('compPanel');resetCompForm()"><i class="ti ti-plus"></i> Add item</button>
+  </div>
+  <div class="panel" id="compPanel">
+    <p class="ct" id="compPanelTitle">Add compliance item</p><input type="hidden" id="compId">
+    <div class="f2">
+      <div class="fg" style="grid-column:1/-1"><label class="fl">Item name</label><input type="text" id="cName" placeholder="e.g. Business Permit, Generator Calibration, ISO Certificate, Lift Inspection"></div>
+      <div class="fg"><label class="fl">Category</label><select id="cCat" onchange="updateComplianceFields()"><option value="Licensing">Licensing</option><option value="Machine Calibration">Machine Calibration</option><option value="Certification">Certification</option><option value="Insurance">Insurance</option><option value="Health & Safety">Health & Safety</option><option value="Environmental">Environmental</option><option value="Statutory Inspection">Statutory Inspection</option></select></div>
+      <div class="fg"><label class="fl">Issuing body</label><input type="text" id="cBody" placeholder="e.g. Nairobi County, KEBS, NEMA, DOSHS"></div>
+      <div class="fg" id="cEquipGroup" style="display:none"><label class="fl">Equipment / Machine inspected</label><input type="text" id="cEquipment" placeholder="e.g. Overhead crane, Boiler #2, Lift A"></div>
+      <div class="fg"><label class="fl" id="cIssuedLabel">Date issued</label><input type="date" id="cIssued"></div>
+      <div class="fg"><label class="fl" id="cExpiryLabel">Expiry date</label><input type="date" id="cExpiry"></div>
+      <div class="fg" id="cReportGroup" style="display:none;grid-column:1/-1"><label class="fl">Inspection report reference / summary</label><input type="text" id="cReportRef" placeholder="Report number, inspector name, key findings"></div>
+      <div class="fg"><label class="fl">Reminder threshold (days)</label><input type="number" id="cRemind" value="60" min="1"></div>
+      <div class="fg" style="grid-column:1/-1"><label class="fl">Notes</label><input type="text" id="cNotes" placeholder="Reference number, contact, etc."></div>
+      <div class="fg" style="grid-column:1/-1">
+        <label class="fl">Attachments <span style="color:var(--tm)">(certificate, inspection report, photos — keep files under 4MB each)</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-file-upload"></i> Add file<input type="file" multiple style="display:none" onchange="addAttachmentFiles('comp',this,'cAttachList')"></label>
+          <label class="btn btg" style="cursor:pointer"><i class="ti ti-camera"></i> Take a photo<input type="file" accept="image/*" capture="environment" style="display:none" onchange="addAttachmentFiles('comp',this,'cAttachList')"></label>
+        </div>
+        <div id="cAttachList" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:.5rem">
+      <button class="btn btp" onclick="saveCompliance()"><i class="ti ti-device-floppy"></i> Save</button>
+      <button class="btn btg" onclick="togglePanel('compPanel')">Cancel</button>
+    </div>
+  </div>
+  <div class="filter-row">
+    <button class="fbtn act" onclick="filterComp('All',this)">All</button>
+    <button class="fbtn" onclick="filterComp('Licensing',this)">Licensing</button>
+    <button class="fbtn" onclick="filterComp('Machine Calibration',this)">Calibration</button>
+    <button class="fbtn" onclick="filterComp('Certification',this)">Certification</button>
+    <button class="fbtn" onclick="filterComp('Insurance',this)">Insurance</button>
+    <button class="fbtn" onclick="filterComp('Statutory Inspection',this)">Statutory Inspection</button>
+    <button class="fbtn" onclick="filterComp('Expired',this)">⚠ Expired / Due</button>
+  </div>
+  <div id="compList"></div>
+</div>
+
+<!-- ===== USERS ===== -->
+<div id="pane-users" class="pane">
+  <div class="kpi-grid" id="userKpis"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;flex-wrap:wrap;gap:8px">
+    <p class="slbl" style="margin:0">User accounts</p>
+    <button class="btn btp" onclick="togglePanel('userPanel');resetUserForm()"><i class="ti ti-user-plus"></i> Add user</button>
+  </div>
+  <div class="panel" id="userPanel">
+    <p class="ct" id="userPanelTitle">Add user</p><input type="hidden" id="uId">
+    <div class="f2">
+      <div class="fg"><label class="fl">Full name</label><input type="text" id="uName" placeholder="e.g. Jane Doe"></div>
+      <div class="fg"><label class="fl">Username</label><input type="text" id="uUsername" placeholder="e.g. jdoe" autocomplete="off"></div>
+      <div class="fg"><label class="fl">Role</label><select id="uRole"><option value="user">User</option><option value="admin">Admin</option><option value="superadmin">Super Admin</option></select></div>
+      <div class="fg"><label class="fl">Status</label><select id="uActive"><option value="1">Active</option><option value="0">Disabled</option></select></div>
+      <div class="fg"><label class="fl">Password <span id="uPassHint" style="color:var(--tm)">(leave blank to keep current)</span></label><input type="password" id="uPass" autocomplete="new-password"></div>
+      <div class="fg"><label class="fl">Confirm password</label><input type="password" id="uPass2" autocomplete="new-password"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:.5rem">
+      <button class="btn btp" onclick="saveUser()"><i class="ti ti-device-floppy"></i> Save</button>
+      <button class="btn btg" onclick="togglePanel('userPanel')">Cancel</button>
+    </div>
+  </div>
+  <div id="userList"></div>
+
+  <p class="slbl" style="margin-top:1.5rem"><i class="ti ti-history"></i> Activity log</p>
+  <div class="filter-row" id="alFilters">
+    <button class="fbtn act" onclick="filterAL('All',this)">All</button>
+    <button class="fbtn" onclick="filterAL('auth',this)">Login/Logout</button>
+    <button class="fbtn" onclick="filterAL('create',this)">Created</button>
+    <button class="fbtn" onclick="filterAL('update',this)">Updated</button>
+    <button class="fbtn" onclick="filterAL('delete',this)">Deleted</button>
+  </div>
+  <div id="activityLog"></div>
+</div>
+
+<!-- ===== SYNC ===== -->
+<div id="pane-settings" class="pane">
+  <div class="card">
+    <p class="ct"><i class="ti ti-brand-google-drive"></i> Photo & file storage</p>
+    <p style="font-size:12px;color:var(--ts);margin-bottom:.75rem">When connected, photos and files upload straight into folders that mirror your categories (e.g. <em>Compliance → Machine Calibration</em>, <em>Incidents → Power</em>, <em>Maintenance → [machine name]</em>). If nothing is connected, files are embedded directly in the data instead (max 4MB each). <strong>The Google Drive option below also carries the entire data sync</strong> (see "Data sync" further down) — one Apps Script setup handles both files and keeping everyone's dashboard up to date, so if you set up cloud sync at all, use Google Drive.</p>
+    <div class="filter-row">
+      <button class="fbtn" id="btnProvZoho" onclick="showDriveProvider('zoho')">Zoho WorkDrive</button>
+      <button class="fbtn act" id="btnProvGoogle" onclick="showDriveProvider('google')">Google Drive (recommended — also runs data sync)</button>
+    </div>
+
+    <div id="provZoho" style="display:none">
+      <p style="font-size:12px;color:var(--ts);margin:.75rem 0">Your folder link points to ID <code>h5zhu16ee70444c254372b6e6b8c8e4dac964</code> — that's already filled in below as the root folder. Zoho WorkDrive doesn't offer a one-click "paste and deploy" bridge like Google does, so this needs a small Zoho Creator app to relay uploads. It's still free and only needs a few one-time clicks — no manual API keys.</p>
+      <div style="margin-bottom:1rem">
+        <div class="step"><div class="stepn">1</div><div class="stepb">In Zoho Creator, create a new blank app (any name, e.g. "TEC Drive Bridge").</div></div>
+        <div class="step"><div class="stepn">2</div><div class="stepb">Under the app's <strong>Connections</strong>, add a new connection to <strong>Zoho WorkDrive</strong> and authorize it. Note the connection's link name (e.g. <code>workdrive_connection</code>) — if you use a different name, update it in the script below.</div></div>
+        <div class="step"><div class="stepn">3</div><div class="stepb">Create a <strong>Custom Function</strong> (Deluge) in the app, delete the placeholder, and paste the script below.</div></div>
+        <div class="step"><div class="stepn">4</div><div class="stepb">Go to the app's <strong>Custom API</strong> builder → create a new Custom API → set method <strong>POST</strong> → under <strong>Function</strong> pick the function you just created → map the request body fields (<code>fileName</code>, <code>mimeType</code>, <code>base64</code>, <code>folderPath</code>, <code>rootFolderId</code>) to the function's inputs → under <strong>Response</strong>, return the function's raw output as the API response body.</div></div>
+        <div class="step"><div class="stepn">5</div><div class="stepb">Copy the generated <strong>Endpoint URL</strong> and paste it below as the Web App URL.</div></div>
+        <div class="step"><div class="stepn">6</div><div class="stepb">Heads up: I've written this against Zoho's documented Deluge tasks, but I can't test-run it myself — use "Test connection" and try uploading one real photo first. If the response doesn't come back as plain JSON, revisit the Response mapping in step 4 (it needs to return the function's output unwrapped).</div></div>
+      </div>
+      <div class="fg" style="margin-bottom:.75rem">
+        <label class="fl">Deluge script (paste into the Custom Function)</label>
+        <textarea id="driveScriptZoho" readonly style="min-height:150px;font-family:monospace;font-size:11px;white-space:pre" onclick="this.select()">result = Map();
+try
+{
+	fileName = input.fileName;
+	mimeType = input.mimeType;
+	base64Data = input.base64;
+	folderPathJson = input.folderPath;
+	rootFolderId = input.rootFolderId;
+	connectionName = "workdrive_connection"; // <-- match the connection name from step 2
+
+	pathParts = folderPathJson.isEmpty() ? {"General"} : folderPathJson.toJSONList();
+	parentId = rootFolderId;
+
+	for each folderName in pathParts
+	{
+		nm = folderName.isEmpty() ? "General" : folderName.trim();
+		foundId = "";
+		hdr = Map();
+		hdr.put("Accept","application/vnd.api+json");
+		listResp = invokeurl
+		[
+			url : "https://www.zohoapis.com/workdrive/api/v1/files/" + parentId + "/files?filter[type]=folder"
+			type : GET
+			headers : hdr
+			connection : connectionName
+		];
+		kids = listResp.get("data");
+		if(kids != null)
+		{
+			for each item in kids
+			{
+				attrs = item.get("attributes");
+				if(attrs.get("name") == nm)
+				{
+					foundId = item.get("id");
+				}
+			}
+		}
+		if(foundId == "")
+		{
+			createResp = zoho.workdrive.createFolder(nm, parentId, connectionName);
+			foundId = createResp.get("data").get("id");
+		}
+		parentId = foundId;
+	}
+
+	fileObj = zoho.encryption.base64DecodeToFile(base64Data, fileName);
+	uploadResp = zoho.workdrive.uploadFile(fileObj, parentId, fileName, true, connectionName);
+	newFile = uploadResp.get("data");
+	newId = newFile.get("id");
+	if(newId == null)
+	{
+		newId = newFile.get(0).get("id");
+	}
+
+	result.put("ok", true);
+	result.put("id", newId);
+	result.put("name", fileName);
+	result.put("url", "https://workdrive.zoho.com/file/" + newId);
+}
+catch (e)
+{
+	result.put("ok", false);
+	result.put("error", e.toString());
+}
+return result.toString();</textarea>
+        <button class="btn btg" style="margin-top:6px" onclick="copyScript('driveScriptZoho')"><i class="ti ti-copy"></i> Copy code</button>
+      </div>
+    </div>
+
+    <div id="provGoogle">
+      <div style="margin:.75rem 0">
+        <div class="step"><div class="stepn">1</div><div class="stepb">Open <a href="https://script.google.com" target="_blank" style="color:var(--ac)">script.google.com</a> → <strong>New project</strong>.</div></div>
+        <div class="step"><div class="stepn">2</div><div class="stepb">Delete the placeholder code, paste the script below in its place, then save (Ctrl/Cmd+S).</div></div>
+        <div class="step"><div class="stepn">3</div><div class="stepb"><strong>Deploy → New deployment →</strong> pick type <strong>Web app</strong>. Set "Execute as" to <strong>Me</strong> and "Who has access" to <strong>Anyone</strong>, then Deploy and authorize it with your Google account.</div></div>
+        <div class="step"><div class="stepn">4</div><div class="stepb">Copy the <strong>Web app URL</strong> it gives you (ends in <code>/exec</code>) and paste it below.</div></div>
+        <div class="step"><div class="stepn">5</div><div class="stepb">Optional but recommended: open the specific Drive folder you want files filed into, copy the ID from its address bar (the part after <code>/folders/</code>), and paste it below. Leave blank to use your Drive's root.</div></div>
+        <div class="step"><div class="stepn">6</div><div class="stepb">If you ever edit the script again, you must create a <strong>new version</strong> under Deploy → Manage deployments, or the old URL keeps running the old code.</div></div>
+      </div>
+      <p style="font-size:12px;color:var(--ts);margin-bottom:.75rem">This one script does two jobs: it uploads photos/files into your Drive folders, <strong>and</strong> it stores the shared app data in a single file (<code>TEC_Data_Sync.json</code>) in that same folder so every device stays in sync. You only need this one setup for both.</p>
+      <div class="fg" style="margin-bottom:.75rem">
+        <label class="fl">Apps Script code (paste into script.google.com)</label>
+        <textarea id="driveScriptCode" readonly style="min-height:150px;font-family:monospace;font-size:11px;white-space:pre" onclick="this.select()">function doPost(e) {
+  try {
+    var body = JSON.parse(e.postData.contents);
+    if (body.action === 'save_data') return saveDataFile_(body);
+    return uploadFile_(body);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  try {
+    if (e.parameter && e.parameter.action === 'data') {
+      return getDataFile_(e.parameter.rootFolderId || '');
+    }
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, msg: 'TEC Drive bridge is running.' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function uploadFile_(body) {
+  var pathParts = body.folderPath || ['General'];
+  var fileName = body.fileName || ('file_' + Date.now());
+  var mimeType = body.mimeType || 'application/octet-stream';
+  var base64 = body.base64;
+  var rootId = body.rootFolderId;
+
+  var folder = rootId ? DriveApp.getFolderById(rootId) : DriveApp.getRootFolder();
+  pathParts.forEach(function (name) {
+    name = (name || 'General').toString().trim() || 'General';
+    var existing = folder.getFoldersByName(name);
+    folder = existing.hasNext() ? existing.next() : folder.createFolder(name);
+  });
+
+  var bytes = Utilities.base64Decode(base64);
+  var blob = Utilities.newBlob(bytes, mimeType, fileName);
+  var file = folder.createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+  return ContentService.createTextOutput(JSON.stringify({
+    ok: true,
+    url: file.getUrl(),
+    id: file.getId(),
+    name: file.getName()
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+var DATA_FILE_NAME = 'TEC_Data_Sync.json';
+
+function dataFolder_(rootId) {
+  return rootId ? DriveApp.getFolderById(rootId) : DriveApp.getRootFolder();
+}
+
+function saveDataFile_(body) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var folder = dataFolder_(body.rootFolderId);
+    var files = folder.getFilesByName(DATA_FILE_NAME);
+    var json = typeof body.data === 'string' ? body.data : JSON.stringify(body.data);
+    if (files.hasNext()) {
+      files.next().setContent(json);
+    } else {
+      folder.createFile(DATA_FILE_NAME, json, MimeType.PLAIN_TEXT);
+    }
+    return ContentService.createTextOutput(JSON.stringify({
+      ok: true,
+      updatedAt: new Date().toISOString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function getDataFile_(rootId) {
+  var folder = dataFolder_(rootId);
+  var files = folder.getFilesByName(DATA_FILE_NAME);
+  if (!files.hasNext()) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, data: null }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  var file = files.next();
+  return ContentService.createTextOutput(JSON.stringify({
+    ok: true,
+    data: file.getBlob().getDataAsString(),
+    updatedAt: file.getLastUpdated().toISOString()
+  })).setMimeType(ContentService.MimeType.JSON);
+}</textarea>
+        <button class="btn btg" style="margin-top:6px" onclick="copyScript('driveScriptCode')"><i class="ti ti-copy"></i> Copy code</button>
+      </div>
+    </div>
+
+    <div class="f2" style="margin-bottom:1rem">
+      <div class="fg"><label class="fl">Bridge / Endpoint URL</label><input type="text" id="driveUrl" placeholder="https://…/exec  or  Custom API endpoint URL"></div>
+      <div class="fg"><label class="fl">Root folder ID <span style="color:var(--tm)">(optional — blank = Drive root)</span></label><input type="text" id="driveRoot" placeholder="h5zhu16ee70444c254372b6e6b8c8e4dac964"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btp role-gate-admin" onclick="saveDriveCfg()"><i class="ti ti-device-floppy"></i> Save</button>
+      <button class="btn btg" onclick="testDriveConnection()"><i class="ti ti-plug-connected"></i> Test connection</button>
+      <button class="btn btg role-gate-superadmin" onclick="disconnectDrive()"><i class="ti ti-unlink"></i> Disconnect</button>
+    </div>
+    <div id="driveStatus" style="margin-top:.875rem;font-size:12px"></div>
+  </div>
+  <div class="card">
+    <p class="ct"><i class="ti ti-cloud"></i> Data sync — everyone sees the same data</p>
+    <p style="font-size:12px;color:var(--ts);margin-bottom:1rem">This uses the <strong>same Google Drive bridge</strong> set up above (Photo &amp; file storage → Google Drive) — there's nothing separate to configure here. Once that bridge URL is saved, every device automatically pulls the latest data every <strong>20 seconds</strong> and pushes every change the moment you make it, so everyone's dashboard stays current without clicking anything. If you haven't set up the Google Drive bridge yet, do that first — this card will show "Not connected" until you do.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btp" onclick="syncNow(true)"><i class="ti ti-refresh"></i> Pull latest now</button>
+      <button class="btn btg" onclick="showDriveProvider('google');document.getElementById('provGoogle').scrollIntoView({behavior:'smooth'})"><i class="ti ti-settings"></i> Go to Drive bridge setup</button>
+    </div>
+    <div id="syncStatus" style="margin-top:.875rem;font-size:12px;color:var(--tm)"></div>
+  </div>
+  <div class="card">
+    <p class="ct"><i class="ti ti-download"></i> Export / Import</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btp" onclick="exportJSON()"><i class="ti ti-file-download"></i> Export JSON backup</button>
+      <label class="btn btg" style="cursor:pointer"><i class="ti ti-file-upload"></i> Import JSON<input type="file" accept=".json" onchange="importJSON(event)" style="display:none"></label>
+    </div>
+  </div>
+  <div class="card">
+    <p class="ct"><i class="ti ti-printer"></i> Report</p>
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+      <div><label class="fl">Period</label><select id="reportPeriodType" style="width:130px" onchange="toggleReportPeriod()"><option value="month">Monthly</option><option value="week">Weekly</option></select></div>
+      <div id="periodMonthWrap"><label class="fl">Month</label><select id="printMonth" style="width:190px"></select></div>
+      <div id="periodWeekWrap" style="display:none"><label class="fl">Any date in the week</label><input type="date" id="printWeekDate" style="width:190px"></div>
+      <button class="btn btp" onclick="generatePrint()"><i class="ti ti-printer"></i> Print / Save as PDF</button>
+      <button class="btn btg" onclick="downloadReportPDF()"><i class="ti ti-file-type-pdf"></i> Download PDF</button>
+      <button class="btn btg" onclick="downloadReportExcel()"><i class="ti ti-file-spreadsheet"></i> Download Excel</button>
+      <button class="btn btg" onclick="downloadReportCSV()"><i class="ti ti-file-text"></i> Download CSV</button>
+    </div>
+    <div id="printMsg" style="margin-top:.625rem;font-size:12px;color:var(--tm)"></div>
+  </div>
+  <div class="card">
+    <p class="ct"><i class="ti ti-trash"></i> Reset local data</p>
+    <button class="btn btd role-gate-superadmin" onclick="resetLocal()"><i class="ti ti-trash"></i> Clear all local data</button>
+  </div>
+</div>
+
+<!-- PRINT REPORT -->
+<div id="print-report">
+  <div class="pr-cover">
+    <img src="" id="pr-letterhead" style="width:100%;display:block;margin-bottom:.875rem;border-radius:2px">
+    <div class="pr-hbar"><div><h2 id="pr-title">TEC Facility — Monthly Report</h2><p id="pr-period"></p></div><div style="text-align:right;font-size:11px;color:rgba(255,255,255,.75)"><div id="pr-by"></div><div id="pr-gen"></div></div></div>
+    <div id="pr-kpis" class="kpi-grid" style="margin-bottom:1.25rem"></div>
+    <div id="pr-rag" class="rag-grid"></div>
+  </div>
+  <div class="pr-sec"><p class="slbl">General updates</p><table class="tbl" id="pr-gu"></table></div>
+  <div class="pr-sec"><p class="slbl">Energy summary</p><table class="tbl" id="pr-energy"></table></div>
+  <div class="pr-sec"><p class="slbl">Water summary</p><table class="tbl" id="pr-water"></table></div>
+  <div class="pr-sec"><p class="slbl">Incidents this month</p><table class="tbl" id="pr-inc"></table></div>
+  <div class="pr-sec"><p class="slbl">Downtime this month</p><table class="tbl" id="pr-dt"></table></div>
+  <div class="pr-sec"><p class="slbl">Events this month</p><table class="tbl" id="pr-ev"></table></div>
+  <div class="pr-sec"><p class="slbl">Compliance status</p><table class="tbl" id="pr-comp"></table></div>
+  <div class="pr-sec"><p class="slbl">Maintenance this period</p><table class="tbl" id="pr-maint"></table></div>
+  <div class="pr-sec"><p class="slbl">Routine checks this period</p><table class="tbl" id="pr-rc"></table></div>
+  <div class="pr-sec"><p class="slbl">Daily log</p><table class="tbl" id="pr-daily"></table></div>
+</div>
+
+</div><!-- /wrap -->
+<div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+/*@@APP_SCRIPT@@*/
+</script>
+</body></html>
