@@ -1,0 +1,15 @@
+{
+  "name": "tec-facility-dashboard",
+  "version": "27.1.0",
+  "private": true,
+  "description": "TEC Facility Reporting Tool - vanilla TypeScript, built into one self-contained HTML file",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build": "node scripts/build.mjs",
+    "test": "node test/differential.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0",
+    "typescript": "6.0.3"
+  }
+}
