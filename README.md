@@ -1,4 +1,4 @@
-To run on loacl machine, use:
+To run on local machine, use:
 npm install
 npm run typecheck
 npm run build
