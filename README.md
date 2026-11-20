@@ -31,8 +31,8 @@ The natural next step is ES modules + `addEventListener`/event delegation; it is
 
 ## Type-safety rules enforced
 
-`strict`, `noImplicitReturns`, `noUnusedLocals/Parameters`, `noEmitOnError`. No `any`, no `as` assertions,
-no `!` non-null operators, no `@ts-ignore` anywhere in `src/`.
+`strict`, `noImplicitReturns`, `noUnusedLocals/Parameters`, `noEmitOnError`. No `any`, no type assertions (`x as T`;
+only `as const` on literal id arrays), no `!` non-null operators, no `@ts-ignore` anywhere in `src/`.
 * DOM: missing elements throw a descriptive error (`byId`) or are handled explicitly (`byIdOrNull`).
 * `JSON.parse` results are `unknown` and checked for container kind (`isList`, `isEntryMap`, ...). Element
   shapes inside persisted data are trusted by contract, as before.
