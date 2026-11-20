@@ -1,9 +1,9 @@
-/* ===== AUTH / PERMISSIONS ===== */
+
 async function sha256hex(str: string): Promise<string>{const enc=new TextEncoder().encode(str);const buf=await crypto.subtle.digest('SHA-256',enc);return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
 async function ensureDefaultUsers(): Promise<void>{if(US.length===0){const hash=await sha256hex('admin123');US.push({id:1,username:'admin',name:'Super Admin',role:'superadmin',passwordHash:hash,active:true,createdAt:today()});saveLocal();}}
 function hasRole(...roles: Role[]): boolean{return currentUser!==null&&roles.includes(currentUser.role);}
 function requirePerm(roles: Role[], msg?: string): boolean{if(!hasRole(...roles)){toast(msg||'You do not have permission to do this.');return false;}return true;}
-/* Regular users may add new records and attachments; only admins/superadmins may edit or delete existing ones. */
+
 function requireCreatePerm(): boolean{if(!currentUser){toast('Please sign in.');return false;}return true;}
 function logActivity(action: string, details = ''): void{AL.push({id:nextId(AL),ts:new Date().toISOString(),user:currentUser?currentUser.username:'system',role:currentUser?currentUser.role:'',action,details});if(AL.length>500)AL=AL.slice(-500);save();}
 function showLogin(): void{byId('loginScreen').style.display='flex';byId('appWrap').classList.add('app-hidden');const isDefault=US.length===1&&US[0].username==='admin';byId('loginHint').innerHTML=isDefault?'First time? Default login: <strong>admin</strong> / <strong>admin123</strong> — please change the password after signing in (Users tab).':'';setTimeout(()=>byId('loginUser').focus(),50);}

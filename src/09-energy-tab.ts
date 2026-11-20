@@ -1,4 +1,4 @@
-/* ===== ENERGY TAB ===== */
+
 function buildEnergyTab(): void{
   const months=[...new Set(Object.keys(E).map(d=>d.slice(0,7)))].sort();
   const ml=months.map(m=>{const[y,mo]=m.split('-').map(Number);return new Date(y,mo-1).toLocaleString('en-GB',{month:'short',year:'2-digit'});});

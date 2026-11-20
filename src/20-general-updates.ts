@@ -1,5 +1,3 @@
-/* ===== TABS ===== */
-/* ===== GENERAL FACILITY UPDATES ===== */
 let guFilter='All';
 function filterGU(f: string, btn: HTMLElement): void{guFilter=f;document.querySelectorAll('#guFilters .fbtn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');buildGUTab();}
 function resetGUForm(): void{(['guId','guHeader','guNote'] as const).forEach(x=>byId(x).value='');byId('guDate').value=today();byId('guPanelTitle').textContent='New facility update';byId('guNoteGroup').style.display='';byId('guAttachGroup').style.display='';resetAttachments('gu');renderAttachList('gu','guAttachList');}

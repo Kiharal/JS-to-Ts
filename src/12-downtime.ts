@@ -1,4 +1,4 @@
-/* ===== DOWNTIME ===== */
+
 function updateDowntimeFields(): void{
   const cat=byId('dtCat').value;
   const isDelay=cat==='Bus Delays'||cat==='Canteen Delays';

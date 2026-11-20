@@ -1,4 +1,4 @@
-/* ===== COMPLIANCE ===== */
+
 function updateComplianceFields(): void{
   const cat=byId('cCat').value;
   const isInsp=cat==='Statutory Inspection';

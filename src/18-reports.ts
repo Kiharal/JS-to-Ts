@@ -1,4 +1,4 @@
-/* ===== REPORT DOWNLOADS: PDF / EXCEL / CSV ===== */
+
 function loadScriptOnce(src: string): Promise<void>{
   return new Promise((res,rej)=>{
     if(document.querySelector(`script[src="${src}"]`)){res();return;}

@@ -1,4 +1,4 @@
-/* ===== INCIDENTS ===== */
+
 function updateIncType(): void{const c=byId('iCat').value;const hints: Lookup<string>={'Health & Safety':'Fire drill, Near miss, Injury, Hazard',Power:'Mains outage, Generator failure, Overload',Equipment:'Pump breakdown, UPS fault, AC failure',Water:'Burst pipe, Leak, Low pressure, Contamination'};byId('iTypeHint').textContent=hints[c]?`— ${hints[c]}`:'';byId('iType').placeholder=hints[c]||'Specify the incident';}
 function saveIncident(): void{
   const id=parseInt(byId('incId').value)||0;

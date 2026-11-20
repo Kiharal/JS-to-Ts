@@ -1,4 +1,4 @@
-/* ===== USERS & ACTIVITY LOG ===== */
+
 function resetUserForm(): void{(['uId','uName','uUsername','uPass','uPass2'] as const).forEach(x=>byId(x).value='');byId('uRole').value='user';byId('uActive').value='1';byId('userPanelTitle').textContent='Add user';}
 async function saveUser(): Promise<void>{
   if(!requirePerm(['superadmin']))return;

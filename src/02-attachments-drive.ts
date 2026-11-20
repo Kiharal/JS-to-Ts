@@ -1,6 +1,8 @@
-/* ===== FILE ATTACHMENTS (generic, used across Updates / Events / Incidents / Downtime / Maintenance / Routine Checks / Compliance) ===== */
-const MAX_ATTACH_BYTES=4*1024*1024;      // embedded-in-JSON limit (no Drive connected)
-const MAX_DRIVE_BYTES=20*1024*1024;      // uploaded-to-Drive limit
+
+const MAX_ATTACH_BYTES=4*1024*1024;      
+const MAX_DRIVE_BYTES=20*1024*1024;      
+
+
 let pendingAttachments: Record<string, Attachment[]>={};
 function resetAttachments(key: string): void{pendingAttachments[key]=[];}
 function loadAttachments(key: string, list: Attachment[] | null | undefined): void{pendingAttachments[key]=(list||[]).map(a=>({...a}));}
@@ -8,9 +10,6 @@ function fileToBase64(file: File): Promise<string>{return new Promise<string>((r
 function fileToBase64Raw(file: File): Promise<string>{return new Promise<string>((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',').pop()??'');r.onerror=()=>rej(new Error('Could not read '+file.name));r.readAsDataURL(file);});}
 function fmtBytes(n: number): string{if(n<1024)return n+' B';if(n<1024*1024)return(n/1024).toFixed(1)+' KB';return(n/1024/1024).toFixed(2)+' MB';}
 
-/* ---- Google Drive bridge (Apps Script Web App) ---- */
-/* Fill this in once you have your Apps Script Web App URL (Settings → Photo & file storage → Google Drive) and this file "just works" for
-   everyone you share it with — no one has to paste anything into Settings. Leave both blank to require each device to set it up individually instead. */
 const DEFAULT_DRIVE_CFG: DriveConfig={url:'',rootId:''};
 const DK='tec:drivecfg';
 function isDriveConfig(v: unknown): v is DriveConfig{return typeof v==='object'&&v!==null&&!Array.isArray(v);}
@@ -18,7 +17,7 @@ function getDriveCfg(): DriveConfig{const c=readStored<DriveConfig>(DK,{},isDriv
 function setDriveCfg(c: DriveConfig): void{localStorage.setItem(DK,JSON.stringify(c));}
 function driveConfigured(): boolean{return!!getDriveCfg().url;}
 
-/* Which Drive sub-folder a given form's uploads should land in, mirroring the tab/category structure */
+
 function attachFolderPath(key: string): string[]{
   if(key==='gu'||key.indexOf('gu_')===0)return['General Updates'];
   if(key==='comp'){const v=byIdOrNull('cCat');return['Compliance',(v&&v.value)||'General'];}
@@ -55,10 +54,6 @@ async function saveDriveCfg(): Promise<void>{
   setDriveCfg({url,rootId});
   updateDriveStatusUI();
   toast('Drive storage settings saved — checking data sync…');
-  // Pull whatever is already shared BEFORE anything on this device has a chance to push — logActivity()
-  // (and any other save()) queues a push the instant driveConfigured() is true, so it must wait until
-  // after this device has merged in the existing shared data, or it would overwrite it with an empty/
-  // stale local copy the moment someone connects a second device.
   lastRemoteUpdatedAt=null;dataLoadedOnce=false;
   const r=await pullCloud(false);
   if(r.ok){await pushCloud();updateAll();renderTab(currentTab);toast('Connected — data sync is live.');}

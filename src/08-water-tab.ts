@@ -1,11 +1,11 @@
-/* ===== WATER TAB ===== */
+
 function buildWaterTab(): void{
   const{readings,daily}=getWaterData();
   const nm=today().slice(0,7);
   const ws=waterMonthSummary(nm);
   const allDaily=daily.filter(x=>x.consM3!=null);
 
-  // KPI strip
+
   const lastR=readings.length?readings[readings.length-1]:null;
   const peak=allDaily.length?allDaily.reduce((a,x)=>x.consM3>a.consM3?x:a,allDaily[0]):null;
   const avgAll=allDaily.length?allDaily.reduce((a,x)=>a+x.consM3,0)/allDaily.length:0;
@@ -16,13 +16,13 @@ function buildWaterTab(): void{
     <div class="w-strip-item"><div class="w-strip-val">${peak?peak.consM3.toFixed(3):'—'}</div><div class="w-strip-lbl">Peak day (m³)${peak?'<br><span style="font-size:10px">'+fmt(peak.date)+'</span>':''}</div></div>
     <div class="w-strip-item"><div class="w-strip-val">${readings.length}</div><div class="w-strip-lbl">Total readings logged</div></div>`;
 
-  // Meter display
+
   byId('waterMeterDisplay').innerHTML=lastR?`
     <div class="w-meter-display">${(lastR[1].water/1000).toFixed(3)}<span>m³ (cumulative) — as at ${fmt(lastR[0])}</span></div>
     <div style="font-size:12px;color:var(--ts)">Meter reading entered: <strong>${lastR[1].water.toLocaleString()} L</strong></div>`
     :'<div style="font-size:12px;color:var(--tm)">No meter readings logged yet. Enter readings in the Daily Entry tab.</div>';
 
-  // Daily consumption chart — last 30 days
+
   const last30=allDaily.slice(-30);
   const avgLast30=last30.length?last30.reduce((a,x)=>a+x.consM3,0)/last30.length:0;
   dc('waterDailyChart');
@@ -58,7 +58,7 @@ function buildWaterTab(): void{
     });
   }
 
-  // Cumulative meter reading
+
   dc('waterCumChart');
   if(readings.length>1){
     charts.waterCumChart=new Chart(byId('waterCumChart'),{
@@ -68,7 +68,7 @@ function buildWaterTab(): void{
     });
   }
 
-  // Day-of-week average
+
   const dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const dowTotals=Array(7).fill(0);const dowCounts=Array(7).fill(0);
   allDaily.forEach(x=>{const d=new Date(x.date+'T00:00:00').getDay();dowTotals[d]+=x.consM3;dowCounts[d]++;});
@@ -80,7 +80,7 @@ function buildWaterTab(): void{
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`Avg: ${ctx.parsed.y} m³`}}},scales:{x:{ticks:{color:MU},grid:{display:false}},y:{ticks:{color:MU,callback:v=>v+' m³'},grid:{color:GR},beginAtZero:true}}}
   });
 
-  // Log table
+
   const logRows=[...daily].reverse();
   byId('waterLogTable').innerHTML=logRows.length===0?'<div class="empty">No water readings yet. Enter meter readings in the Daily Entry tab.</div>':`
     <table class="tbl">

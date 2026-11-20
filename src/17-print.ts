@@ -1,4 +1,4 @@
-/* ===== PRINT ===== */
+
 function getGUReportRows(start: string, end: string): GuReportRow[]{
   const inRange=(dt: string | null | undefined): boolean=>!!dt&&dt>=start&&dt<=end;
   const rows: GuReportRow[]=[];

@@ -1,4 +1,4 @@
-/* ===== ROUTINE CHECKS ===== */
+
 function renderRCAssetOptions(): void{
   const sel=byId('rcAsset');
   const cur=sel.value;

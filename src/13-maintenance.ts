@@ -1,4 +1,4 @@
-/* ===== MAINTENANCE ===== */
+
 function toggleAssetOtherType(): void{const v=byId('aType').value;byId('aTypeOtherWrap').style.display=v==='Other'?'block':'none';}
 function resetAssetForm(): void{(['assetId','aName','aMake','aSerial','aNotes','aLast','aNext','aTypeOther'] as const).forEach(x=>byId(x).value='');byId('aType').value='Machine';byId('aFreq').value='Monthly';byId('assetPanelTitle').textContent='Add equipment';toggleAssetOtherType();resetAttachments('asset');renderAttachList('asset','assetAttachList');}
 function saveAsset(): void{const id=parseInt(byId('assetId').value)||0;if(id){if(!requirePerm(['admin','superadmin']))return;}else if(!requireCreatePerm())return;const name=byId('aName').value.trim();if(!name){toast('Enter name');return;}const typeVal=byId('aType').value;const customType=typeVal==='Other'?byId('aTypeOther').value.trim():'';const obj: Asset={id:id||nextId(MA),name,type:typeVal,customType,frequency:byId('aFreq').value,lastMaint:byId('aLast').value,nextDue:byId('aNext').value,make:byId('aMake').value,serial:byId('aSerial').value,notes:byId('aNotes').value,attachments:pendingAttachments['asset']||[]};if(id){const idx=MA.findIndex(x=>x.id===id);if(idx>-1)MA[idx]=obj;const openEntry=assetOpenEntry(id);if(openEntry&&obj.nextDue)openEntry.nextDue=obj.nextDue;logActivity('update_asset','Updated asset: '+name);}else{MA.push(obj);logActivity('create_asset','Added asset: '+name);}save();buildMaintTab();buildDashboard();togglePanel('assetPanel');toast('Asset saved.');}
@@ -14,9 +14,8 @@ function saveMaintenanceLog(): void{
   const logDate=byId('logDate').value;
   const nextDue=byId('logNext').value;
   const costVal=byId('logCost').value;
-  // This visit completes whatever was due — close out any entry still open for this asset, then open
-  // a fresh one for what was just done. That new entry stays "open" (current) until it, in turn, is
-  // closed by the next logged visit; its next-due date is what the asset register watches for overdue.
+
+
   ML.filter(l=>l.assetId===assetId&&(l.status||'open')==='open').forEach(l=>{l.status='closed';});
   ML.push({id:nextId(ML),assetId,date:logDate,work,technician:byId('logTech').value,cost:Number(costVal)||0,notes:byId('logNotes').value,nextDue,attachments:pendingAttachments['ml']||[],status:'open'});
   const a=MA.find(x=>x.id===assetId);
@@ -29,7 +28,7 @@ function toggleMLStatus(id: number): void{
   const l=ML.find(x=>x.id===id);if(!l)return;
   const reopening=(l.status||'open')==='closed';
   if(reopening){
-    // keep the "at most one open cycle per asset" rule intact
+
     ML.filter(x=>x.assetId===l.assetId&&x.id!==l.id&&(x.status||'open')==='open').forEach(x=>{x.status='closed';});
   }
   l.status=reopening?'open':'closed';
@@ -40,10 +39,7 @@ function toggleMLStatus(id: number): void{
 }
 byId('logModal').addEventListener('click',e=>{if(e.target===byId('logModal'))closeLogModal();});
 function filterAsset(f: string, btn: HTMLElement): void{assetFilter=f;document.querySelectorAll('#assetFilters .fbtn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');buildMaintTab();}
-/* The asset's "current" maintenance cycle is whichever ML entry for it is still open — logging a new
-   visit closes that entry (it becomes history) and opens a fresh one carrying the next-due date, so the
-   asset register always tracks overdue status off the single latest open entry. Assets with no logged
-   history yet fall back to the Next due / Last maintained typed directly on the asset. */
+
 function assetOpenEntry(assetId: number): MaintenanceLog | null{const opens=ML.filter(l=>l.assetId===assetId&&(l.status||'open')==='open');if(!opens.length)return null;return opens.reduce((a,b)=>b.id>a.id?b:a);}
 function assetSchedule(a: Asset): AssetSchedule{
   const open=assetOpenEntry(a.id);

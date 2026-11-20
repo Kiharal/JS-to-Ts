@@ -1,4 +1,3 @@
-/* ===== STATE ===== */
 let E: EntryMap={},I: Incident[]=[],EV: EventRecord[]=[],MA: Asset[]=[],ML: MaintenanceLog[]=[],CO: ComplianceItem[]=[],DT: DowntimeRecord[]=[],US: User[]=[],AL: ActivityEntry[]=[],RC: RoutineCheck[]=[],GU: UpdateThread[]=[];
 let currentUser: User | null=null;
 const ROLE_LABEL: Lookup<string>={superadmin:'Super Admin',admin:'Admin',user:'User'};

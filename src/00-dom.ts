@@ -1,10 +1,3 @@
-/* ===== TYPED DOM ACCESS =====
-   Every element lookup goes through these helpers instead of document.getElementById().
-   - byId('entryDate')   -> HTMLInputElement   (id known at compile time; type comes from the generated ElementMap)
-   - byId(someString)    -> HTMLElement        (id only known at run time)
-   Both throw a descriptive error when the element is missing - the same failure the old code hit as a
-   "cannot read properties of null" TypeError - so a typo or a removed element is never silently ignored.
-   Use byIdOrNull() only where the code genuinely tolerates a missing element. */
 type ElementId = keyof ElementMap;
 
 function byId<K extends ElementId>(id: K): ElementMap[K];

@@ -1,4 +1,3 @@
-/* ===== TABS ===== */
 const TABS=['dashboard','updates','entry','energy','water','events','incidents','downtime','maintenance','compliance','users','settings'] as const;
 let currentTab: TabName='dashboard';
 function renderTab(t: TabName): void{

@@ -1,4 +1,4 @@
-/* ===== DAILY ENTRY ===== */
+
 function loadEntry(): void{
   const d=byId('entryDate').value;const e=E[d]||{};
   byId('eUtility').value=String(e.utility||'');byId('eLoad').value=String(e.load||'');byId('eLoadKVA').value=String(e.loadKVA||'');byId('eSolar1').value=String(e.solar1||'');byId('eSolar2').value=String(e.solar2||'');

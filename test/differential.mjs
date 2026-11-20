@@ -36,9 +36,7 @@ async function boot(file) {
     virtualConsole: vc,
     beforeParse(win) {
       win.matchMedia = (q) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} });
-      // Everything the app hands to the external libraries is recorded in win.__log and compared between runs.
-      // Functions inside configs (tooltip callbacks etc.) are replaced by a marker: their source text differs
-      // legitimately between the original and the compiled build.
+      
       const log = (kind, payload) => win.__log.push(kind + ' ' + JSON.stringify(payload, (k, v) => (typeof v === 'function' ? '[fn]' : v)));
       win.__log = [];
       win.Chart = class { constructor(ctx, cfg) { log('chart', { canvas: ctx && ctx.id, cfg }); } destroy() { win.__log.push('chart.destroy'); } update() {} static register() {} };
@@ -122,7 +120,7 @@ async function boot(file) {
   return api;
 }
 
-/* ------------------------------------------------------------------ the scenario */
+
 async function scenario(app) {
   const { win, doc, set, tick, snap } = app;
   const call = async (fn, ...args) => { try { await win[fn](...args); } catch (e) { app.errors.push(`call ${fn}: ${e.message}`); } await tick(); };
@@ -237,7 +235,7 @@ async function scenario(app) {
   snap(`final state after ${clicks} simulated interactions`);
 }
 
-/* ------------------------------------------------------------------ compare */
+
 function excerpt(a, b) {
   let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++;
   return `first difference at char ${i}:\n   baseline : …${a.slice(Math.max(0, i - 70), i + 110)}…\n   candidate: …${b.slice(Math.max(0, i - 70), i + 110)}…`;
