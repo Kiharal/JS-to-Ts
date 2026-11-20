@@ -1,28 +1,34 @@
 /* ===== REPORT DOWNLOADS: PDF / EXCEL / CSV ===== */
-function loadScriptOnce(src){
+function loadScriptOnce(src: string): Promise<void>{
   return new Promise((res,rej)=>{
     if(document.querySelector(`script[src="${src}"]`)){res();return;}
     const s=document.createElement('script');s.src=src;s.onload=()=>res();s.onerror=()=>rej(new Error('Failed to load '+src));document.head.appendChild(s);
   });
 }
-async function ensurePDFLib(){
+async function ensurePDFLib(): Promise<JsPdfNamespace>{
   if(!(window.jspdf&&window.jspdf.jsPDF))await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-  if(!(window.jspdf.jsPDF.API&&window.jspdf.jsPDF.API.autoTable))await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');
+  const lib=window.jspdf;
+  if(!lib)throw new Error('jsPDF failed to load');
+  if(!(lib.jsPDF.API&&lib.jsPDF.API.autoTable))await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');
+  return lib;
 }
-async function ensureXLSXLib(){
+async function ensureXLSXLib(): Promise<XlsxNamespace>{
   if(!window.XLSX)await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  const lib=window.XLSX;
+  if(!lib)throw new Error('SheetJS failed to load');
+  return lib;
 }
-function csvEscape(v){if(v==null)v='';v=String(v);if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
-function rowsToCSV(rows){return rows.map(r=>r.map(csvEscape).join(',')).join('\r\n');}
-function triggerDownload(blob,filename){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);}
+function csvEscape(v: unknown): string{let s=v==null?'':String(v);if(/[",\n]/.test(s))s='"'+s.replace(/"/g,'""')+'"';return s;}
+function rowsToCSV(rows: unknown[][]): string{return rows.map(r=>r.map(csvEscape).join(',')).join('\r\n');}
+function triggerDownload(blob: Blob, filename: string): void{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);}
 
-async function downloadReportPDF(){
-  const range=getReportRange();if(!range){toast(document.getElementById('reportPeriodType').value==='week'?'Pick a date within the week':'Select a month');return;}
-  document.getElementById('printMsg').textContent='Building PDF…';
+async function downloadReportPDF(): Promise<void>{
+  const range=getReportRange();if(!range){toast(byId('reportPeriodType').value==='week'?'Pick a date within the week':'Select a month');return;}
+  byId('printMsg').textContent='Building PDF…';
   try{
-    await ensurePDFLib();
+    const pdfLib=await ensurePDFLib();
     const d=buildReportData(range);
-    const{jsPDF}=window.jspdf;
+    const{jsPDF}=pdfLib;
     const doc=new jsPDF({unit:'pt',format:'a4'});
     const pageW=doc.internal.pageSize.getWidth();
     const pageH=doc.internal.pageSize.getHeight();
@@ -88,24 +94,24 @@ async function downloadReportPDF(){
       body:d.en.length?d.en.map(([dt,v])=>{const wd=d.mwd.find(x=>x.date===dt);return[fmt(dt),v.utility||'—',(Number(v.solar1)||0)+(Number(v.solar2)||0),v.water?(v.water/1000).toFixed(3):'—',wd&&wd.consM3!=null?wd.consM3.toFixed(3):'Baseline',v.power||'—',v.internet||'—'];}):[['No entries this period','','','','','','']]});
 
     doc.save(`TEC_Report_${range.type}_${range.fileTag}.pdf`);
-    document.getElementById('printMsg').textContent='PDF downloaded.';
+    byId('printMsg').textContent='PDF downloaded.';
     logActivity('export_report','Downloaded PDF report for '+range.label);
     toast('PDF downloaded.');
   }catch(err){
-    document.getElementById('printMsg').textContent='PDF export failed: '+err.message;
+    byId('printMsg').textContent='PDF export failed: '+errorMessage(err);
     toast('PDF export failed — check your internet connection.',4000);
   }
 }
 
-async function downloadReportExcel(){
-  const range=getReportRange();if(!range){toast(document.getElementById('reportPeriodType').value==='week'?'Pick a date within the week':'Select a month');return;}
-  document.getElementById('printMsg').textContent='Building Excel workbook…';
+async function downloadReportExcel(): Promise<void>{
+  const range=getReportRange();if(!range){toast(byId('reportPeriodType').value==='week'?'Pick a date within the week':'Select a month');return;}
+  byId('printMsg').textContent='Building Excel workbook…';
   try{
-    await ensureXLSXLib();
+    const XLSX=await ensureXLSXLib();
     const d=buildReportData(range);
     const wb=XLSX.utils.book_new();
 
-    const guRows=[['Date','Update','Status','Note','Attachments']];
+    const guRows: SheetRow[]=[['Date','Update','Status','Note','Attachments']];
     d.mgu.forEach(g=>guRows.push([fmt(g.date),g.header,g.status==='closed'?'Closed':'Open',g.note,g.files||0]));
     if(d.mgu.length===0)guRows.push(['No general updates this period','','','','']);
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(guRows),'General Updates');
@@ -118,46 +124,46 @@ async function downloadReportExcel(){
       ['Water total (m³)',Number(d.ws.totalM3.toFixed(3))],['Water avg/day (m³)',Number(d.ws.avgM3.toFixed(4))],
     ]),'Summary');
 
-    const dailyRows=[['Date','Utility (kWh)','Solar (kWh)','Meter (m³)','Water consumption (m³)','Power','Internet']];
+    const dailyRows: SheetRow[]=[['Date','Utility (kWh)','Solar (kWh)','Meter (m³)','Water consumption (m³)','Power','Internet']];
     d.en.forEach(([dt,v])=>{const wd=d.mwd.find(x=>x.date===dt);dailyRows.push([fmt(dt),v.utility||'',(Number(v.solar1)||0)+(Number(v.solar2)||0),v.water?Number((v.water/1000).toFixed(3)):'',wd&&wd.consM3!=null?Number(wd.consM3.toFixed(3)):'',v.power||'',v.internet||'']);});
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dailyRows),'Daily Log');
 
-    const incRows=[['Date','Category','Incident','Severity','Start','Resolved','Downtime (man-hrs)','Status']];
+    const incRows: SheetRow[]=[['Date','Category','Incident','Severity','Start','Resolved','Downtime (man-hrs)','Status']];
     d.mi.forEach(i=>incRows.push([fmt(i.date),i.category,i.type,i.severity,fmtDT(i.start),i.end?fmtDT(i.end):'Ongoing',Number(incidentManHours(i).toFixed(2)),i.status]));
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(incRows),'Incidents');
 
-    const dtRows=[['Date','Category','Area','Start','End','Duration (min)','Reason','Status']];
+    const dtRows: SheetRow[]=[['Date','Category','Area','Start','End','Duration (min)','Reason','Status']];
     d.mdt.forEach(x=>dtRows.push([fmt(x.date),x.category,x.area||'',fmtDT(x.start),x.end?fmtDT(x.end):'Ongoing',downtimeMinutes(x),x.reason||'',x.status]));
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dtRows),'Downtime');
 
-    const evRows=[['Date','Category','Title','Attendees','Description','Notes']];
+    const evRows: SheetRow[]=[['Date','Category','Title','Attendees','Description','Notes']];
     d.mev.forEach(e=>evRows.push([fmt(e.date),e.category,e.title,e.attendees||'',e.description||'',(e.notes||'').replace(/\n/g,'; ')]));
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(evRows),'Events');
 
-    const compRows=[['Item','Category','Equipment','Expiry','Status','Report Ref','Attachments']];
+    const compRows: SheetRow[]=[['Item','Category','Equipment','Expiry','Status','Report Ref','Attachments']];
     CO.forEach(c=>{const dd=daysUntil(c.expiry);compRows.push([c.name,c.category,c.equipment||'',fmt(c.expiry),dd===null?'No expiry':dd<0?'EXPIRED':dd===0?'Today':dd+' days',c.reportRef||'',(c.attachments||[]).length]);});
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(compRows),'Compliance');
 
-    const mlRows=[['Date','Asset','Work done','Technician','Cost (KES)','Attachments']];
+    const mlRows: SheetRow[]=[['Date','Asset','Work done','Technician','Cost (KES)','Attachments']];
     d.mml.forEach(l=>{const a=MA.find(x=>x.id===l.assetId);mlRows.push([fmt(l.date),a?a.name:'',l.work,l.technician||'',l.cost||0,(l.attachments||[]).length]);});
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(mlRows),'Maintenance');
 
-    const rcRows=[['Date','Asset','Items checked','Comments','Checked by','Attachments']];
+    const rcRows: SheetRow[]=[['Date','Asset','Items checked','Comments','Checked by','Attachments']];
     d.mrc.forEach(r=>{const a=MA.find(x=>x.id===r.assetId);rcRows.push([fmt(r.date),a?a.name:'',(r.items||'').replace(/\n/g,'; '),r.comments||'',r.checker||'',(r.attachments||[]).length]);});
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rcRows),'Routine Checks');
 
     XLSX.writeFile(wb,`TEC_Report_${range.type}_${range.fileTag}.xlsx`);
-    document.getElementById('printMsg').textContent='Excel workbook downloaded.';
+    byId('printMsg').textContent='Excel workbook downloaded.';
     logActivity('export_report','Downloaded Excel report for '+range.label);
     toast('Excel workbook downloaded.');
   }catch(err){
-    document.getElementById('printMsg').textContent='Excel export failed: '+err.message;
+    byId('printMsg').textContent='Excel export failed: '+errorMessage(err);
     toast('Excel export failed — check your internet connection.',4000);
   }
 }
 
-function downloadReportCSV(){
-  const range=getReportRange();if(!range){toast(document.getElementById('reportPeriodType').value==='week'?'Pick a date within the week':'Select a month');return;}
+function downloadReportCSV(): void{
+  const range=getReportRange();if(!range){toast(byId('reportPeriodType').value==='week'?'Pick a date within the week':'Select a month');return;}
   const d=buildReportData(range);
   const out=[];
   out.push(['DAVIS & SHIRTLIFF']);out.push(['PO Box 41762-00100, Nairobi, Kenya - Tel: (+254 20) 6968 000, 0711 079000 - headoffice@dayliff.com']);out.push([]);
@@ -184,7 +190,7 @@ function downloadReportCSV(){
 
   const csv=rowsToCSV(out);
   triggerDownload(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}),`TEC_Report_${range.type}_${range.fileTag}.csv`);
-  document.getElementById('printMsg').textContent='CSV downloaded.';
+  byId('printMsg').textContent='CSV downloaded.';
   logActivity('export_report','Downloaded CSV report for '+range.label);
   toast('CSV downloaded.');
 }

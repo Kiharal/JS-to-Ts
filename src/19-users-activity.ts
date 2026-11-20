@@ -1,14 +1,14 @@
 /* ===== USERS & ACTIVITY LOG ===== */
-function resetUserForm(){['uId','uName','uUsername','uPass','uPass2'].forEach(x=>document.getElementById(x).value='');document.getElementById('uRole').value='user';document.getElementById('uActive').value='1';document.getElementById('userPanelTitle').textContent='Add user';}
-async function saveUser(){
+function resetUserForm(): void{(['uId','uName','uUsername','uPass','uPass2'] as const).forEach(x=>byId(x).value='');byId('uRole').value='user';byId('uActive').value='1';byId('userPanelTitle').textContent='Add user';}
+async function saveUser(): Promise<void>{
   if(!requirePerm(['superadmin']))return;
-  const id=parseInt(document.getElementById('uId').value)||0;
-  const name=document.getElementById('uName').value.trim();
-  const username=document.getElementById('uUsername').value.trim();
-  const role=document.getElementById('uRole').value;
-  const active=document.getElementById('uActive').value==='1';
-  const pass=document.getElementById('uPass').value;
-  const pass2=document.getElementById('uPass2').value;
+  const id=parseInt(byId('uId').value)||0;
+  const name=byId('uName').value.trim();
+  const username=byId('uUsername').value.trim();
+  const role=oneOf<Role>(['superadmin','admin','user'],byId('uRole').value,'user');
+  const active=byId('uActive').value==='1';
+  const pass=byId('uPass').value;
+  const pass2=byId('uPass2').value;
   if(!name||!username){toast('Name and username required');return;}
   if(!id&&!pass){toast('Password required for a new user');return;}
   if(pass&&pass!==pass2){toast('Passwords do not match');return;}
@@ -31,8 +31,8 @@ async function saveUser(){
   }
   save();buildUsersTab();togglePanel('userPanel');toast('User saved.');
 }
-function editUser(id){const u=US.find(x=>x.id===id);if(!u)return;document.getElementById('uId').value=u.id;document.getElementById('uName').value=u.name;document.getElementById('uUsername').value=u.username;document.getElementById('uRole').value=u.role;document.getElementById('uActive').value=u.active===false?'0':'1';document.getElementById('uPass').value='';document.getElementById('uPass2').value='';document.getElementById('userPanelTitle').textContent='Edit user';const p=document.getElementById('userPanel');if(!p.classList.contains('open'))p.classList.add('open');}
-function deleteUser(id){
+function editUser(id: number): void{const u=US.find(x=>x.id===id);if(!u)return;byId('uId').value=String(u.id);byId('uName').value=u.name;byId('uUsername').value=u.username;byId('uRole').value=u.role;byId('uActive').value=u.active===false?'0':'1';byId('uPass').value='';byId('uPass2').value='';byId('userPanelTitle').textContent='Edit user';const p=byId('userPanel');if(!p.classList.contains('open'))p.classList.add('open');}
+function deleteUser(id: number): void{
   if(!requirePerm(['superadmin']))return;
   const u=US.find(x=>x.id===id);if(!u)return;
   if(currentUser&&u.id===currentUser.id){toast("You can't delete the account you're logged in as.");return;}
@@ -42,9 +42,9 @@ function deleteUser(id){
   logActivity('delete_user','Deleted user '+u.username);
   save();buildUsersTab();toast('User deleted.');
 }
-function buildUsersTab(){
-  document.getElementById('userKpis').innerHTML=`<div class="kpi"><div class="kl">Total users</div><div class="kv">${US.length}</div></div><div class="kpi"><div class="kl">Active</div><div class="kv">${US.filter(u=>u.active!==false).length}</div></div><div class="kpi"><div class="kl">Super Admins</div><div class="kv">${US.filter(u=>u.role==='superadmin').length}</div></div><div class="kpi"><div class="kl">Admins / Users</div><div class="kv" style="font-size:16px">${US.filter(u=>u.role==='admin').length} / ${US.filter(u=>u.role==='user').length}</div></div>`;
-  document.getElementById('userList').innerHTML=US.length===0?'<div class="empty">No users.</div>':US.map(u=>`
+function buildUsersTab(): void{
+  byId('userKpis').innerHTML=`<div class="kpi"><div class="kl">Total users</div><div class="kv">${US.length}</div></div><div class="kpi"><div class="kl">Active</div><div class="kv">${US.filter(u=>u.active!==false).length}</div></div><div class="kpi"><div class="kl">Super Admins</div><div class="kv">${US.filter(u=>u.role==='superadmin').length}</div></div><div class="kpi"><div class="kl">Admins / Users</div><div class="kv" style="font-size:16px">${US.filter(u=>u.role==='admin').length} / ${US.filter(u=>u.role==='user').length}</div></div>`;
+  byId('userList').innerHTML=US.length===0?'<div class="empty">No users.</div>':US.map(u=>`
     <div class="asset-card">
       <div class="asset-body">
         <div class="asset-name">${u.name} <span class="role-pill role-${u.role}">${ROLE_LABEL[u.role]}</span> ${u.active===false?'<span class="badge br">Disabled</span>':''}</div>
@@ -57,8 +57,8 @@ function buildUsersTab(){
     </div>`).join('');
   renderActivityLog();
 }
-function filterAL(f,btn){alFilter=f;document.querySelectorAll('#alFilters .fbtn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');renderActivityLog();}
-function renderActivityLog(){
+function filterAL(f: string, btn: HTMLElement): void{alFilter=f;document.querySelectorAll('#alFilters .fbtn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');renderActivityLog();}
+function renderActivityLog(): void{
   const authA=['login','logout','login_failed'];
   let list=[...AL];
   if(alFilter==='auth')list=list.filter(x=>authA.includes(x.action));
@@ -66,6 +66,6 @@ function renderActivityLog(){
   else if(alFilter==='update')list=list.filter(x=>x.action.startsWith('update'));
   else if(alFilter==='delete')list=list.filter(x=>x.action.startsWith('delete'));
   list=list.slice().reverse().slice(0,150);
-  document.getElementById('activityLog').innerHTML=list.length===0?'<div class="empty">No activity recorded yet.</div>':`<table class="tbl"><tr><th>Time</th><th>User</th><th>Role</th><th>Action</th><th>Details</th></tr>${list.map(x=>`<tr><td style="white-space:nowrap;font-size:11px">${new Date(x.ts).toLocaleString('en-GB')}</td><td>${x.user}</td><td>${ROLE_LABEL[x.role]||x.role||'—'}</td><td>${x.action.replace(/_/g,' ')}</td><td style="color:var(--ts)">${x.details||''}</td></tr>`).join('')}</table>`;
+  byId('activityLog').innerHTML=list.length===0?'<div class="empty">No activity recorded yet.</div>':`<table class="tbl"><tr><th>Time</th><th>User</th><th>Role</th><th>Action</th><th>Details</th></tr>${list.map(x=>`<tr><td style="white-space:nowrap;font-size:11px">${new Date(x.ts).toLocaleString('en-GB')}</td><td>${x.user}</td><td>${ROLE_LABEL[x.role]||x.role||'—'}</td><td>${x.action.replace(/_/g,' ')}</td><td style="color:var(--ts)">${x.details||''}</td></tr>`).join('')}</table>`;
 }
 

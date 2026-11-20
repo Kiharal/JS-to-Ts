@@ -1,11 +1,11 @@
 /* ===== ROUTINE CHECKS ===== */
-function renderRCAssetOptions(){
-  const sel=document.getElementById('rcAsset');
+function renderRCAssetOptions(): void{
+  const sel=byId('rcAsset');
   const cur=sel.value;
   sel.innerHTML='<option value="">— select —</option>'+MA.map(a=>`<option value="${a.id}">${a.name}</option>`).join('')+'<option value="__new__">+ Add new equipment…</option>';
   if(cur)sel.value=cur;
 }
-function rcAssetChanged(sel){
+function rcAssetChanged(sel: HTMLSelectElement): void{
   if(sel.value!=='__new__')return;
   const name=(prompt('Name of the new machine / equipment:')||'').trim();
   if(!name){sel.value='';return;}
@@ -14,20 +14,20 @@ function rcAssetChanged(sel){
   logActivity('create_asset','Added equipment via routine check: '+name);
   save();
   renderRCAssetOptions();
-  sel.value=newAsset.id;
+  sel.value=String(newAsset.id);
   toast('Added "'+name+'" — it will now appear in this list everywhere.');
 }
-function rcRag(x){const dd=daysUntil(x.nextCheck);if(dd===null)return'dn';if(dd<0)return'dr';if(dd<=7)return'da';return'dg';}
-function resetRCForm(){['rcId','rcDate','rcItems','rcComments','rcChecker','rcNextCheck'].forEach(x=>document.getElementById(x).value='');renderRCAssetOptions();document.getElementById('rcAsset').value='';document.getElementById('rcPanelTitle').textContent='Log routine check';resetAttachments('rc');renderAttachList('rc','rcAttachList');}
-function saveRoutineCheck(){
-  const id=parseInt(document.getElementById('rcId').value)||0;
+function rcRag(x: RoutineCheck): Rag{const dd=daysUntil(x.nextCheck);if(dd===null)return'dn';if(dd<0)return'dr';if(dd<=7)return'da';return'dg';}
+function resetRCForm(): void{(['rcId','rcDate','rcItems','rcComments','rcChecker','rcNextCheck'] as const).forEach(x=>byId(x).value='');renderRCAssetOptions();byId('rcAsset').value='';byId('rcPanelTitle').textContent='Log routine check';resetAttachments('rc');renderAttachList('rc','rcAttachList');}
+function saveRoutineCheck(): void{
+  const id=parseInt(byId('rcId').value)||0;
   if(id){if(!requirePerm(['admin','superadmin']))return;}else if(!requireCreatePerm())return;
-  const assetId=parseInt(document.getElementById('rcAsset').value)||0;
-  const items=document.getElementById('rcItems').value.trim();
-  const checker=document.getElementById('rcChecker').value.trim();
+  const assetId=parseInt(byId('rcAsset').value)||0;
+  const items=byId('rcItems').value.trim();
+  const checker=byId('rcChecker').value.trim();
   if(!assetId){toast('Select the machine / equipment checked');return;}
   if(!items){toast('List at least one item / area checked');return;}
-  const obj={id:id||nextId(RC),date:document.getElementById('rcDate').value||today(),assetId,items,comments:document.getElementById('rcComments').value,checker,nextCheck:document.getElementById('rcNextCheck').value,attachments:pendingAttachments['rc']||[],status:id?(RC.find(x=>x.id===id)||{}).status||'open':'open'};
+  const obj: RoutineCheck={id:id||nextId(RC),date:byId('rcDate').value||today(),assetId,items,comments:byId('rcComments').value,checker,nextCheck:byId('rcNextCheck').value,attachments:pendingAttachments['rc']||[],status:id?(RC.find(x=>x.id===id)||{}).status||'open':'open'};
   const a=MA.find(x=>x.id===assetId);
   if(id){const idx=RC.findIndex(x=>x.id===id);if(idx>-1)RC[idx]=obj;logActivity('update_routine_check','Updated routine check: '+(a?a.name:assetId));}
   else{
@@ -37,9 +37,9 @@ function saveRoutineCheck(){
   }
   save();buildRoutineChecksTab();togglePanel('rcPanel');resetRCForm();toast('Routine check saved.');
 }
-function editRoutineCheck(id){const x=RC.find(r=>r.id===id);if(!x)return;renderRCAssetOptions();document.getElementById('rcId').value=x.id;document.getElementById('rcDate').value=x.date||'';document.getElementById('rcAsset').value=x.assetId;document.getElementById('rcItems').value=x.items||'';document.getElementById('rcComments').value=x.comments||'';document.getElementById('rcChecker').value=x.checker||'';document.getElementById('rcNextCheck').value=x.nextCheck||'';loadAttachments('rc',x.attachments);renderAttachList('rc','rcAttachList');document.getElementById('rcPanelTitle').textContent='Edit routine check';const p=document.getElementById('rcPanel');if(!p.classList.contains('open'))p.classList.add('open');}
-function deleteRoutineCheck(id){if(!requirePerm(['admin','superadmin']))return;const x=RC.find(r=>r.id===id);if(!confirm('Delete this routine check?'))return;RC=RC.filter(r=>r.id!==id);const a=x?MA.find(m=>m.id===x.assetId):null;logActivity('delete_routine_check','Deleted routine check: '+(a?a.name:''));save();buildRoutineChecksTab();toast('Deleted.');}
-function toggleRCStatus(id){
+function editRoutineCheck(id: number): void{const x=RC.find(r=>r.id===id);if(!x)return;renderRCAssetOptions();byId('rcId').value=String(x.id);byId('rcDate').value=x.date||'';byId('rcAsset').value=String(x.assetId);byId('rcItems').value=x.items||'';byId('rcComments').value=x.comments||'';byId('rcChecker').value=x.checker||'';byId('rcNextCheck').value=x.nextCheck||'';loadAttachments('rc',x.attachments);renderAttachList('rc','rcAttachList');byId('rcPanelTitle').textContent='Edit routine check';const p=byId('rcPanel');if(!p.classList.contains('open'))p.classList.add('open');}
+function deleteRoutineCheck(id: number): void{if(!requirePerm(['admin','superadmin']))return;const x=RC.find(r=>r.id===id);if(!confirm('Delete this routine check?'))return;RC=RC.filter(r=>r.id!==id);const a=x?MA.find(m=>m.id===x.assetId):null;logActivity('delete_routine_check','Deleted routine check: '+(a?a.name:''));save();buildRoutineChecksTab();toast('Deleted.');}
+function toggleRCStatus(id: number): void{
   if(!requirePerm(['admin','superadmin']))return;
   const x=RC.find(r=>r.id===id);if(!x)return;
   const reopening=(x.status||'open')==='closed';
@@ -47,12 +47,12 @@ function toggleRCStatus(id){
   x.status=reopening?'open':'closed';
   const a=MA.find(m=>m.id===x.assetId);logActivity('update_routine_check',(x.status==='closed'?'Closed':'Reopened')+' routine check: '+(a?a.name:''));save();buildRoutineChecksTab();toast(x.status==='closed'?'Marked as closed.':'Reopened as current.');
 }
-function logRCFor(assetId){togglePanel('rcPanel');resetRCForm();document.getElementById('rcAsset').value=assetId;}
-function buildRoutineChecksTab(){
+function logRCFor(assetId: number): void{togglePanel('rcPanel');resetRCForm();byId('rcAsset').value=String(assetId);}
+function buildRoutineChecksTab(): void{
   renderRCAssetOptions();
-  const overdue=RC.filter(x=>x.nextCheck&&daysUntil(x.nextCheck)<0).length;
+  const overdue=RC.filter(x=>!!x.nextCheck&&(daysUntil(x.nextCheck)??0)<0).length;
   const dueSoon=RC.filter(x=>{const d=daysUntil(x.nextCheck);return d!=null&&d>=0&&d<=7;}).length;
-  document.getElementById('rcKpis').innerHTML=`<div class="kpi"><div class="kl">Checks logged</div><div class="kv">${RC.length}</div></div><div class="kpi"><div class="kl">Overdue</div><div class="kv">${overdue}</div><span class="badge ${overdue===0?'bg':'br'}">${overdue===0?'All current':'Action needed'}</span></div><div class="kpi"><div class="kl">Due ≤7 days</div><div class="kv">${dueSoon}</div></div>`;
+  byId('rcKpis').innerHTML=`<div class="kpi"><div class="kl">Checks logged</div><div class="kv">${RC.length}</div></div><div class="kpi"><div class="kl">Overdue</div><div class="kv">${overdue}</div><span class="badge ${overdue===0?'bg':'br'}">${overdue===0?'All current':'Action needed'}</span></div><div class="kpi"><div class="kl">Due ≤7 days</div><div class="kv">${dueSoon}</div></div>`;
 
   const assetIds=[...new Set(RC.map(x=>x.assetId))];
   const assets=assetIds.map(id=>MA.find(a=>a.id===id)||{id,name:'Unknown asset'});
@@ -62,7 +62,7 @@ function buildRoutineChecksTab(){
     return(daysUntil(oa?oa.nextCheck:null)??999)-(daysUntil(ob?ob.nextCheck:null)??999);
   });
 
-  document.getElementById('routineCheckList').innerHTML=assets.length===0?'<div class="empty">No routine checks logged yet.</div>':assets.map(a=>{
+  byId('routineCheckList').innerHTML=assets.length===0?'<div class="empty">No routine checks logged yet.</div>':assets.map(a=>{
     const checks=sortOpenClosed(RC.filter(x=>x.assetId===a.id),x=>x.status==='closed',x=>x.date);
     const openCheck=checks.find(x=>(x.status||'open')==='open');
     const rag=openCheck?rcRag(openCheck):'dn';

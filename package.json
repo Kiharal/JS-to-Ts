@@ -4,11 +4,15 @@
   "private": true,
   "description": "TEC Facility Reporting Tool - vanilla TypeScript, built into one self-contained HTML file",
   "scripts": {
+    "gen:ids": "node scripts/gen-element-map.mjs",
+    "pretypecheck": "npm run gen:ids --silent",
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "prebuild": "npm run gen:ids --silent",
     "build": "node scripts/build.mjs",
-    "test": "node test/differential.mjs"
+    "test": "npm run build --silent && node test/differential.mjs"
   },
   "devDependencies": {
+    "chart.js": "4.4.1",
     "jsdom": "26.1.0",
     "typescript": "6.0.3"
   }

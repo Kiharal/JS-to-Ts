@@ -36,7 +36,23 @@ async function boot(file) {
     virtualConsole: vc,
     beforeParse(win) {
       win.matchMedia = (q) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} });
-      win.Chart = class { constructor(ctx, cfg) { this.ctx = ctx; this.cfg = cfg; } destroy() {} update() {} static register() {} };
+      // Everything the app hands to the external libraries is recorded in win.__log and compared between runs.
+      // Functions inside configs (tooltip callbacks etc.) are replaced by a marker: their source text differs
+      // legitimately between the original and the compiled build.
+      const log = (kind, payload) => win.__log.push(kind + ' ' + JSON.stringify(payload, (k, v) => (typeof v === 'function' ? '[fn]' : v)));
+      win.__log = [];
+      win.Chart = class { constructor(ctx, cfg) { log('chart', { canvas: ctx && ctx.id, cfg }); } destroy() { win.__log.push('chart.destroy'); } update() {} static register() {} };
+      win.jspdf = {
+        jsPDF: class {
+          constructor(o) { log('pdf.new', o); this.internal = { pageSize: { getWidth: () => 595, getHeight: () => 842 } }; this.lastAutoTable = { finalY: 100 };
+            for (const m of ['text', 'setFontSize', 'setTextColor', 'addImage', 'addPage', 'autoTable', 'save']) this[m] = (...a) => { log('pdf.' + m, m === 'addImage' ? [a[1], ...a.slice(2)] : a); return this; }; }
+          static API = { autoTable: true };
+        },
+      };
+      win.XLSX = {
+        utils: { book_new: () => ({ sheets: [] }), aoa_to_sheet: (rows) => ({ rows }), book_append_sheet: (wb, sh, name) => log('xlsx.sheet', { name, rows: sh.rows }) },
+        writeFile: (wb, name) => log('xlsx.write', name),
+      };
       win.HTMLCanvasElement.prototype.getContext = () => ({});
       win.HTMLElement.prototype.scrollIntoView = () => {};
       win.scrollTo = () => {};
@@ -97,7 +113,7 @@ async function boot(file) {
       const body = clone.innerHTML + '\n#FORM#' + formState();
       const ls = lsState();
       const newErrors = errors.slice(errMark); errMark = errors.length;
-      trace.push({ label, body: sha(body), ls: sha(ls), toast: doc.getElementById('toast')?.textContent ?? '', errors: newErrors.join(' || ') });
+      trace.push({ label, body: sha(body), ls: sha(ls), log: sha(win.__log.join('\n')), toast: doc.getElementById('toast')?.textContent ?? '', errors: newErrors.join(' || ') });
       bodies.set(label + '#' + (trace.length - 1), { body, ls });
     },
     bodyOf(i) { return bodies.get(trace[i].label + '#' + i); },
@@ -184,6 +200,17 @@ async function scenario(app) {
   // all tabs again, now with data
   for (const t of TABS) { await call('sw', t); snap(`tab ${t} (with records)`); }
 
+  // report exports: PDF / Excel / CSV / print preview, for a month and for a week
+  await call('sw', 'settings');
+  for (const [type, label] of [['month', 'month'], ['week', 'week']]) {
+    set('reportPeriodType', type); await call('toggleReportPeriod');
+    if (type === 'month') { await call('buildPrintMonths'); set('printMonth', '2026-11'); } else set('printWeekDate', '2026-11-12');
+    await call('downloadReportPDF'); await tick(30); snap(`export ${label}: pdf`);
+    await call('downloadReportExcel'); await tick(30); snap(`export ${label}: excel`);
+    await call('downloadReportCSV'); snap(`export ${label}: csv`);
+    await call('generatePrint'); snap(`export ${label}: print preview`);
+  }
+
   // monkey sweep: click every inline-handler button in each pane, change every filter <select>
   let clicks = 0;
   for (const t of TABS) {
@@ -229,6 +256,7 @@ for (let i = 0; i < Math.min(base.trace.length, cand.trace.length); i++) {
   if (a.label !== b.label) bad.push('label');
   if (a.body !== b.body) bad.push('DOM/form');
   if (a.ls !== b.ls) bad.push('localStorage');
+  if (a.log !== b.log) bad.push('library calls (charts/pdf/xlsx)');
   if (a.toast !== b.toast) bad.push(`toast ("${a.toast}" vs "${b.toast}")`);
   if (a.errors !== b.errors) bad.push(`errors ("${a.errors}" vs "${b.errors}")`);
   if (bad.length) {
@@ -236,6 +264,7 @@ for (let i = 0; i < Math.min(base.trace.length, cand.trace.length); i++) {
     console.log(`MISMATCH @${i} [${a.label}]: ${bad.join(', ')}`);
     if (bad.includes('DOM/form')) console.log('  ' + excerpt(base.bodyOf(i).body, cand.bodyOf(i).body));
     if (bad.includes('localStorage')) console.log('  ' + excerpt(base.bodyOf(i).ls, cand.bodyOf(i).ls));
+    if (bad.includes('library calls (charts/pdf/xlsx)')) console.log('  ' + excerpt(base.win.__log.join('\n'), cand.win.__log.join('\n')));
   }
 }
 
@@ -247,6 +276,8 @@ console.log(`baseline errors     : ${base.errors.length} (in ${baseErrs} steps; 
 console.log(`distinct toasts seen: ${toasts.size}`);
 for (const k of ['Event saved.', 'Saved.', 'Asset saved.']) console.log(`  saw "${k}": ${toasts.has(k)}`);
 const ls = JSON.parse(JSON.stringify([...Object.keys(base.win.localStorage)].sort().map((k) => [k, base.win.localStorage.getItem(k).length])));
+const kinds = {}; for (const l of base.win.__log) { const k = l.split(' ')[0]; kinds[k] = (kinds[k] ?? 0) + 1; }
+console.log(`library calls logged: ${Object.entries(kinds).map(([k, n]) => `${k}×${n}`).join(' ')}`);
 console.log(`localStorage keys   : ${ls.map(([k, n]) => `${k}(${n})`).join(' ')}`);
 console.log(failures ? `\nRESULT: FAIL (${failures} difference${failures > 1 ? 's' : ''})` : '\nRESULT: PASS - candidate behaves identically to the original');
 process.exit(failures ? 1 : 0);

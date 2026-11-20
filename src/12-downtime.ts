@@ -1,43 +1,43 @@
 /* ===== DOWNTIME ===== */
-function updateDowntimeFields(){
-  const cat=document.getElementById('dtCat').value;
+function updateDowntimeFields(): void{
+  const cat=byId('dtCat').value;
   const isDelay=cat==='Bus Delays'||cat==='Canteen Delays';
-  document.getElementById('dtReasonGroup').style.display=isDelay?'':'none';
-  document.getElementById('dtDescLabel').textContent=isDelay?'Additional notes':'Description';
-  document.getElementById('dtDesc').placeholder=isDelay?'Any extra detail (optional)':'What happened, and the impact';
+  byId('dtReasonGroup').style.display=isDelay?'':'none';
+  byId('dtDescLabel').textContent=isDelay?'Additional notes':'Description';
+  byId('dtDesc').placeholder=isDelay?'Any extra detail (optional)':'What happened, and the impact';
 }
-function clearDowntimeForm(){['dtId','dtEndDate','dtEndTime','dtArea','dtDesc','dtReason'].forEach(x=>document.getElementById(x).value='');splitDT(nowLocalDT(),'dtStartDate','dtStartTime');document.getElementById('dtCat').value='';document.getElementById('dtPanelTitle').textContent='Log / edit downtime';updateDowntimeFields();resetAttachments('dt');renderAttachList('dt','dtAttachList');}
-function saveDowntime(){
-  const id=parseInt(document.getElementById('dtId').value)||0;
+function clearDowntimeForm(): void{(['dtId','dtEndDate','dtEndTime','dtArea','dtDesc','dtReason'] as const).forEach(x=>byId(x).value='');splitDT(nowLocalDT(),'dtStartDate','dtStartTime');byId('dtCat').value='';byId('dtPanelTitle').textContent='Log / edit downtime';updateDowntimeFields();resetAttachments('dt');renderAttachList('dt','dtAttachList');}
+function saveDowntime(): void{
+  const id=parseInt(byId('dtId').value)||0;
   if(id){if(!requirePerm(['admin','superadmin']))return;}else if(!requireCreatePerm())return;
-  const cat=document.getElementById('dtCat').value;
+  const cat=byId('dtCat').value;
   if(!cat){toast('Select a category');return;}
   const start=combineDT('dtStartDate','dtStartTime');
   if(!start){toast('Enter the start date');return;}
   const end=combineDT('dtEndDate','dtEndTime');
   if(end&&end<start){toast('End time cannot be before the start time');return;}
-  const obj={id:id||nextId(DT),date:start.slice(0,10),start,end,category:cat,area:document.getElementById('dtArea').value,reason:document.getElementById('dtReason').value,description:document.getElementById('dtDesc').value,status:end?'Resolved':'Ongoing',attachments:pendingAttachments['dt']||[]};
+  const obj: DowntimeRecord={id:id||nextId(DT),date:start.slice(0,10),start,end,category:cat,area:byId('dtArea').value,reason:byId('dtReason').value,description:byId('dtDesc').value,status:end?'Resolved':'Ongoing',attachments:pendingAttachments['dt']||[]};
   if(id){const idx=DT.findIndex(x=>x.id===id);if(idx>-1)DT[idx]=obj;logActivity('update_downtime','Updated downtime: '+cat);}
   else{DT.push(obj);logActivity('create_downtime','Logged downtime: '+cat);}
   save();buildDowntimeTab();togglePanel('dtPanel');clearDowntimeForm();toast('Downtime logged.');
 }
-function editDowntime(id){
+function editDowntime(id: number): void{
   const x=DT.find(d=>d.id===id);if(!x)return;
-  document.getElementById('dtId').value=x.id;
+  byId('dtId').value=String(x.id);
   splitDT(x.start||(x.date?x.date+'T00:00':''),'dtStartDate','dtStartTime');
   splitDT(x.end||'','dtEndDate','dtEndTime');
-  document.getElementById('dtCat').value=x.category||'';
-  document.getElementById('dtArea').value=x.area||'';
-  document.getElementById('dtReason').value=x.reason||'';
-  document.getElementById('dtDesc').value=x.description||'';
-  document.getElementById('dtPanelTitle').textContent='Edit downtime';
+  byId('dtCat').value=x.category||'';
+  byId('dtArea').value=x.area||'';
+  byId('dtReason').value=x.reason||'';
+  byId('dtDesc').value=x.description||'';
+  byId('dtPanelTitle').textContent='Edit downtime';
   updateDowntimeFields();
   loadAttachments('dt',x.attachments);renderAttachList('dt','dtAttachList');
-  const p=document.getElementById('dtPanel');if(!p.classList.contains('open'))p.classList.add('open');
+  const p=byId('dtPanel');if(!p.classList.contains('open'))p.classList.add('open');
 }
-function deleteDowntime(id){if(!requirePerm(['admin','superadmin']))return;const x0=DT.find(x=>x.id===id);if(!confirm('Delete?'))return;DT=DT.filter(x=>x.id!==id);logActivity('delete_downtime','Deleted downtime: '+(x0?x0.category:id));save();buildDowntimeTab();toast('Deleted.');}
-function filterDT(f,btn){dtFilter=f;document.querySelectorAll('#dtFilters .fbtn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');buildDowntimeTab();}
-function toggleDowntimeStatus(id){
+function deleteDowntime(id: number): void{if(!requirePerm(['admin','superadmin']))return;const x0=DT.find(x=>x.id===id);if(!confirm('Delete?'))return;DT=DT.filter(x=>x.id!==id);logActivity('delete_downtime','Deleted downtime: '+(x0?x0.category:id));save();buildDowntimeTab();toast('Deleted.');}
+function filterDT(f: string, btn: HTMLElement): void{dtFilter=f;document.querySelectorAll('#dtFilters .fbtn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');buildDowntimeTab();}
+function toggleDowntimeStatus(id: number): void{
   if(!requirePerm(['admin','superadmin']))return;
   const x=DT.find(d=>d.id===id);if(!x)return;
   if(x.status==='Resolved'){x.status='Ongoing';x.end=null;}
@@ -45,12 +45,12 @@ function toggleDowntimeStatus(id){
   logActivity('update_downtime',(x.status==='Resolved'?'Ended':'Reopened')+' downtime: '+x.category);
   save();buildDowntimeTab();toast(x.status==='Resolved'?'Marked as ended.':'Reopened.');
 }
-function buildDowntimeTab(){
+function buildDowntimeTab(): void{
   const totalMin=DT.reduce((a,x)=>a+downtimeMinutes(x),0);
   const ongoing=DT.filter(x=>x.status!=='Resolved').length;
-  const catCounts={};DT.forEach(x=>{catCounts[x.category]=(catCounts[x.category]||0)+downtimeMinutes(x);});
+  const catCounts: Record<string, number>={};DT.forEach(x=>{catCounts[x.category]=(catCounts[x.category]||0)+downtimeMinutes(x);});
   const topCat=Object.entries(catCounts).sort((a,b)=>b[1]-a[1])[0];
-  document.getElementById('downtimeKpis').innerHTML=`
+  byId('downtimeKpis').innerHTML=`
     <div class="kpi"><div class="kl">Total events</div><div class="kv">${DT.length}</div></div>
     <div class="kpi"><div class="kl">Total downtime</div><div class="kv" style="font-size:19px">${fmtDuration(totalMin)}</div></div>
     <div class="kpi"><div class="kl">Ongoing</div><div class="kv">${ongoing}</div><span class="badge ${ongoing===0?'bg':'br'}">${ongoing===0?'None open':'Needs attention'}</span></div>
@@ -59,10 +59,10 @@ function buildDowntimeTab(){
   const cats=['Machine Breakdown','Power Outage','Health & Safety Incident','Bus Delays','Canteen Delays','Water Outage','Other'];
   const catData=cats.map(c=>catCounts[c]||0);
   dc('dtByCatChart');
-  charts.dtByCatChart=new Chart(document.getElementById('dtByCatChart'),{type:'bar',data:{labels:cats.map(c=>c.replace(' Incident','')),datasets:[{label:'Minutes',data:catData,backgroundColor:cats.map(c=>dtCol[c]),borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmtDuration(ctx.parsed.y)}}},scales:{x:{ticks:{color:MU,font:{size:10}},grid:{display:false}},y:{ticks:{color:MU},grid:{color:GR},beginAtZero:true}}}});
+  charts.dtByCatChart=new Chart(byId('dtByCatChart'),{type:'bar',data:{labels:cats.map(c=>c.replace(' Incident','')),datasets:[{label:'Minutes',data:catData,backgroundColor:cats.map(c=>dtCol[c]),borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmtDuration(ctx.parsed.y)}}},scales:{x:{ticks:{color:MU,font:{size:10}},grid:{display:false}},y:{ticks:{color:MU},grid:{color:GR},beginAtZero:true}}}});
 
   const catsVisible=dtFilter==='Ongoing'?cats.filter(c=>DT.some(x=>x.category===c&&x.status!=='Resolved')):dtFilter==='All'?cats:cats.filter(c=>c===dtFilter);
-  document.getElementById('downtimeList').innerHTML=catsVisible.length===0?'<div class="empty">No downtime events matching filter.</div>':catsVisible.map(cat=>{
+  byId('downtimeList').innerHTML=catsVisible.length===0?'<div class="empty">No downtime events matching filter.</div>':catsVisible.map(cat=>{
     const events=sortOpenClosed(DT.filter(x=>x.category===cat),x=>x.status==='Resolved',x=>x.date);
     const ongoingCount=events.filter(x=>x.status!=='Resolved').length;
     const catMin=catCounts[cat]||0;

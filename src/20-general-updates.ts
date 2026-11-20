@@ -1,38 +1,38 @@
 /* ===== TABS ===== */
 /* ===== GENERAL FACILITY UPDATES ===== */
 let guFilter='All';
-function filterGU(f,btn){guFilter=f;document.querySelectorAll('#guFilters .fbtn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');buildGUTab();}
-function resetGUForm(){['guId','guHeader','guNote'].forEach(x=>document.getElementById(x).value='');document.getElementById('guDate').value=today();document.getElementById('guPanelTitle').textContent='New facility update';document.getElementById('guNoteGroup').style.display='';document.getElementById('guAttachGroup').style.display='';resetAttachments('gu');renderAttachList('gu','guAttachList');}
-function saveGU(){
-  const id=parseInt(document.getElementById('guId').value)||0;
+function filterGU(f: string, btn: HTMLElement): void{guFilter=f;document.querySelectorAll('#guFilters .fbtn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');buildGUTab();}
+function resetGUForm(): void{(['guId','guHeader','guNote'] as const).forEach(x=>byId(x).value='');byId('guDate').value=today();byId('guPanelTitle').textContent='New facility update';byId('guNoteGroup').style.display='';byId('guAttachGroup').style.display='';resetAttachments('gu');renderAttachList('gu','guAttachList');}
+function saveGU(): void{
+  const id=parseInt(byId('guId').value)||0;
   if(id){if(!requirePerm(['admin','superadmin']))return;}else if(!requireCreatePerm())return;
-  const header=document.getElementById('guHeader').value.trim();
+  const header=byId('guHeader').value.trim();
   if(!header){toast('Enter a header / title');return;}
-  const date=document.getElementById('guDate').value||today();
-  const note=document.getElementById('guNote').value.trim();
+  const date=byId('guDate').value||today();
+  const note=byId('guNote').value.trim();
   if(id){
     const idx=GU.findIndex(x=>x.id===id);
     if(idx>-1){GU[idx].header=header;GU[idx].date=date;logActivity('update_facility_update','Updated update header: '+header);}
   }else{
     const attachments=pendingAttachments['gu']||[];
-    const obj={id:nextId(GU),header,date,status:'open',createdBy:currentUser?currentUser.username:'system',reviews:(note||attachments.length)?[{id:1,date,author:currentUser?currentUser.username:'system',text:note,attachments}]:[]};
+    const obj: UpdateThread={id:nextId(GU),header,date,status:'open',createdBy:currentUser?currentUser.username:'system',reviews:(note||attachments.length)?[{id:1,date,author:currentUser?currentUser.username:'system',text:note,attachments}]:[]};
     GU.push(obj);
     logActivity('create_facility_update','Created facility update: '+header);
   }
   save();buildGUTab();togglePanel('guPanel');resetGUForm();toast('Saved.');
 }
-function editGUHeader(id){const g=GU.find(x=>x.id===id);if(!g)return;document.getElementById('guId').value=g.id;document.getElementById('guHeader').value=g.header;document.getElementById('guDate').value=g.date;document.getElementById('guNote').value='';document.getElementById('guNoteGroup').style.display='none';document.getElementById('guAttachGroup').style.display='none';document.getElementById('guPanelTitle').textContent='Edit update header';const p=document.getElementById('guPanel');if(!p.classList.contains('open'))p.classList.add('open');}
-function deleteGU(id){if(!requirePerm(['admin','superadmin']))return;const g=GU.find(x=>x.id===id);if(!confirm('Delete this entire update thread, including all its reviews?'))return;GU=GU.filter(x=>x.id!==id);logActivity('delete_facility_update','Deleted facility update: '+(g?g.header:id));save();buildGUTab();toast('Deleted.');}
-function toggleGUStatus(id){
+function editGUHeader(id: number): void{const g=GU.find(x=>x.id===id);if(!g)return;byId('guId').value=String(g.id);byId('guHeader').value=g.header;byId('guDate').value=g.date;byId('guNote').value='';byId('guNoteGroup').style.display='none';byId('guAttachGroup').style.display='none';byId('guPanelTitle').textContent='Edit update header';const p=byId('guPanel');if(!p.classList.contains('open'))p.classList.add('open');}
+function deleteGU(id: number): void{if(!requirePerm(['admin','superadmin']))return;const g=GU.find(x=>x.id===id);if(!confirm('Delete this entire update thread, including all its reviews?'))return;GU=GU.filter(x=>x.id!==id);logActivity('delete_facility_update','Deleted facility update: '+(g?g.header:id));save();buildGUTab();toast('Deleted.');}
+function toggleGUStatus(id: number): void{
   if(!requirePerm(['admin','superadmin']))return;
   const g=GU.find(x=>x.id===id);if(!g)return;
   g.status=(g.status||'open')==='open'?'closed':'open';
   logActivity('update_facility_update',(g.status==='closed'?'Closed':'Reopened')+' facility update: '+g.header);
   save();buildGUTab();toast(g.status==='closed'?'Marked as closed.':'Reopened.');
 }
-function addGUReview(threadId){
+function addGUReview(threadId: number): void{
   if(!requireCreatePerm())return;
-  const ta=document.getElementById('guReviewInput_'+threadId);
+  const ta=byIdAs('guReviewInput_'+threadId,HTMLTextAreaElement);
   const text=ta.value.trim();
   const attachments=pendingAttachments['gu_'+threadId]||[];
   if(!text&&!attachments.length){toast('Enter the review text or attach a file');return;}
@@ -43,7 +43,7 @@ function addGUReview(threadId){
   resetAttachments('gu_'+threadId);
   save();buildGUTab();toast('Review added.');
 }
-function deleteGUReview(threadId,reviewId){
+function deleteGUReview(threadId: number, reviewId: number): void{
   if(!requirePerm(['admin','superadmin']))return;
   const g=GU.find(x=>x.id===threadId);if(!g)return;
   if(!confirm('Delete this review?'))return;
@@ -51,13 +51,13 @@ function deleteGUReview(threadId,reviewId){
   logActivity('update_facility_update','Deleted a review from: '+g.header);
   save();buildGUTab();toast('Deleted.');
 }
-function buildGUTab(){
+function buildGUTab(): void{
   const openCount=GU.filter(g=>(g.status||'open')==='open').length;
   const closedCount=GU.filter(g=>g.status==='closed').length;
-  document.getElementById('guKpis').innerHTML=`<div class="kpi"><div class="kl">Total updates</div><div class="kv">${GU.length}</div></div><div class="kpi"><div class="kl">Open tasks</div><div class="kv">${openCount}</div><span class="badge ba">${openCount===0?'None':'In progress'}</span></div><div class="kpi"><div class="kl">Closed tasks</div><div class="kv">${closedCount}</div><span class="badge bg">${closedCount===0?'None yet':'Resolved'}</span></div>`;
+  byId('guKpis').innerHTML=`<div class="kpi"><div class="kl">Total updates</div><div class="kv">${GU.length}</div></div><div class="kpi"><div class="kl">Open tasks</div><div class="kv">${openCount}</div><span class="badge ba">${openCount===0?'None':'In progress'}</span></div><div class="kpi"><div class="kl">Closed tasks</div><div class="kv">${closedCount}</div><span class="badge bg">${closedCount===0?'None yet':'Resolved'}</span></div>`;
   const filtered=GU.filter(g=>guFilter==='All'?true:guFilter==='Open'?(g.status||'open')==='open':g.status==='closed');
   const list=sortOpenClosed(filtered,g=>g.status==='closed',g=>g.date);
-  document.getElementById('guList').innerHTML=list.length===0?'<div class="empty">No facility updates yet. Click "New update" to start one.</div>':list.map(g=>{
+  byId('guList').innerHTML=list.length===0?'<div class="empty">No facility updates yet. Click "New update" to start one.</div>':list.map(g=>{
     const status=g.status||'open';
     const reviews=(g.reviews||[]).slice().sort((a,b)=>a.date.localeCompare(b.date)||(a.id-b.id));
     resetAttachments('gu_'+g.id);
